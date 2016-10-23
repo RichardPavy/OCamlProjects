@@ -298,12 +298,10 @@ let ocaml_private_rules_generator ~folder =
     assert (Utils.dcheck (Private.is_private folder)
 			 "Folder %s is not a private folder (%s/...)"
 			 (File.to_string folder) Private.private_folder);
-    let folder_string = if File.is_root folder
-			then ""
-			else (File.to_string folder) ^ "/" in
-    list_folder_content (Private.to_public folder)
+    let public_folder = Private.to_public folder in
+    list_folder_content public_folder
     |> It.of_list
-    |> It.map (fun file -> File.parsef "%s%s" folder_string file)
+    |> It.map (File.child public_folder)
     |> It.map begin fun file ->
 	      match File.extension file with
 	      | "mli" -> let file = Canonical.file_to_canonical_file file in
@@ -319,9 +317,11 @@ let ocaml_private_rules_generator ~folder =
 			  byte_rule (File.with_ext "byte" file) ;
 			  exe_rule (File.with_ext "exe" file) ]
                         |> It.of_list
-              | _ when (File.to_string file <> Private.private_folder)
-                       && (Timestamp.kind (Private.to_public file) = Timestamp.Folder) ->
-                 It.singleton (CommonRules.folder_rule file)
+              | _ when (File.is_root file |> not)
+                       && (Timestamp.kind file = Timestamp.Folder) ->
+                 file |> Private.to_private
+                      |> CommonRules.folder_rule
+                      |> It.singleton
 	      | _ -> It.empty ()
 	      end
     |> It.flatten
@@ -346,19 +346,19 @@ let ocaml_public_rules_generator ~folder =
         else fun it -> it)
     |> It.map (fun file -> File.parsef "%s%s" folder_string file)
     |> It.map begin fun file ->
-	      match File.extension file with
+	      begin match File.extension file with
 	      | "ml" -> [ CommonRules.noop_rule file;
                           Canonical.public_ml_file_rule (File.with_ext "cma" file) ;
 			  Canonical.public_ml_file_rule (File.with_ext "cmxa" file) ;
 			  Canonical.public_ml_file_rule (File.with_ext "byte" file) ;
 			  Canonical.public_ml_file_rule (File.with_ext "exe" file) ]
-                        |> It.of_list
-	      | "mli" -> It.singleton (CommonRules.noop_rule file)
+	      | "mli" -> [ CommonRules.noop_rule file ]
               | "cma" | "cmxa" | "byte" | "exe" ->
                  if (file |> (File.with_ext "ml") |> Timestamp.kind) = Timestamp.Null
-                 then It.singleton (CommonRules.noop_rule file)
-                 else It.empty ()
-              | _ -> It.singleton (CommonRules.noop_rule file)
+                 then [ CommonRules.noop_rule file ]
+                 else []
+              | _ -> [ CommonRules.noop_rule file ]
+              end |> It.of_list
 	      end
     |> It.flatten
     |> fun rules -> OCamlMake.rule_generator_result ~rules ()

@@ -19,9 +19,9 @@ DEPS = \
     Property \
     Flag \
     Private \
-    CommonRules \
     OCamlDep \
     OCamlMake \
+    CommonRules \
     Canonical \
     CommonRules \
     OCamlRules \
@@ -33,10 +33,11 @@ $(OM:=.exe): $(DEPS:=.mli) $(DEPS:=.ml) #$(OM:=.mli) $(OM:=.ml)
 	ocamlfind opt -o $@ -linkpkg $(FLAGS) $^
 
 Make.exe: $(OM:=.exe)
-	rm -rf build/
+	make clean
 	./$(OM:=.exe) -target $@
 
 clean:
+	rm -rf build/
 	(cd .. ; make clean)
 
 .PHONY: test clean
