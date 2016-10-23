@@ -29,8 +29,8 @@ let main () =
                                 (fun _ -> Iterable.singleton "-noassert")
                        |> ignore
                        end;
-        OCamlBuild.add_root_rule_generator OCamlRules.ocaml_rules_generator;
-	OCamlBuild.build target)
+        OCamlMake.add_root_rule_generator OCamlRules.ocaml_rules_generator;
+	OCamlMake.build target)
 
 let () =
   assert (Cache.dclear_all_caches ());

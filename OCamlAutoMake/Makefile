@@ -1,6 +1,6 @@
 FLAGS = -package unix,str
 
-OB = OCamlBuild
+OM = OCamlMake
 DEPS = \
     Log \
     Iterable \
@@ -18,32 +18,23 @@ DEPS = \
     Process \
     Property \
     Flag \
+    Private \
+    CommonRules \
     OCamlDep \
-    OCamlBuild \
+    OCamlMake \
+    Canonical \
     CommonRules \
     OCamlRules \
-    Main
+    Make
 
-all: $(OB:=.cma) $(OB:=.cmxa)
+all: Make.exe
 
-$(OB:=.cma): $(DEPS:=.mli) $(DEPS:=.ml) #$(OB:=.mli) $(OB:=.ml)
-	ocamlfind ocamlc -o $@ -a $(FLAGS) $^
-
-$(OB:=.cmxa): $(DEPS:=.mli) $(DEPS:=.ml) #$(OB:=.mli) $(OB:=.ml)
-	ocamlfind opt -o $@ -a $(FLAGS) $^
-
-$(OB:=.test): $(DEPS:=.mli) $(DEPS:=.ml) #$(OB:=.mli) $(OB:=.ml)
+$(OM:=.exe): $(DEPS:=.mli) $(DEPS:=.ml) #$(OM:=.mli) $(OM:=.ml)
 	ocamlfind opt -o $@ -linkpkg $(FLAGS) $^
 
-$(OB:=.exe): $(DEPS:=.mli) $(DEPS:=.ml) #$(OB:=.mli) $(OB:=.ml)
-	ocamlfind opt -o $@ -linkpkg -noassert $(FLAGS) $^
-
-test: OCamlBuild.test
-	./OCamlBuild.test
-
-Main.exe: OCamlBuild.exe
-	make clean
-	./OCamlBuild.exe -target Main.exe
+Make.exe: $(OM:=.exe)
+	rm -rf build/
+	./$(OM:=.exe) -target $@
 
 clean:
 	(cd .. ; make clean)

@@ -1,5 +1,7 @@
-type rule = { targets: File.t Iterable.t;
-	      sources: File.t Iterable.t;
+module It = Iterable
+
+type rule = { targets: File.t It.t;
+	      sources: File.t It.t;
 	      command: unit -> unit }
 
  and memoized_rule = { mutable executed: bool ;
@@ -7,13 +9,13 @@ type rule = { targets: File.t Iterable.t;
 
  and rule_generator = folder: File.t -> rule_generator_result
  and rule_generator_result = {
-     rules: rule Iterable.t ;
-     other_generators: rule_generator Iterable.t ;
+     rules: rule It.t ;
+     other_generators: rule_generator It.t ;
    }
 
 let rule_generator_result
-      ?(rules = Iterable.empty ())
-      ?(other_generators = Iterable.empty ())
+      ?(rules = It.empty ())
+      ?(other_generators = It.empty ())
       () =
   { rules ; other_generators }
 
@@ -24,8 +26,8 @@ let add_root_rule_generator rule = Queue.add rule root_rule_generators
 let get_rule_name { sources ; targets } =
   Printf.sprintf
     "{%s} -> {%s}"
-    (sources |> Iterable.map File.to_string |> Utils.join " ")
-    (targets |> Iterable.map File.to_string |> Utils.join " ")
+    (sources |> It.map File.to_string |> Utils.join " ")
+    (targets |> It.map File.to_string |> Utils.join " ")
 
 let memoized_rule rule =
   { executed = false ;
@@ -44,7 +46,7 @@ let try_get_rule =
       let record_rule rule =
         let mrule = memoized_rule rule in
         mrule.rule.targets
-	|> Iterable.iter
+	|> It.iter
 	     begin fun target ->
 	     assert (Utils.dcheck (Hashtbl.mem rules_by_target target |> not)
 				  "Duplicate rule for target <%s>"
@@ -58,12 +60,12 @@ let try_get_rule =
       in
       let rec aux generators =
 	generators
-	|> Iterable.map (fun rule_generator -> rule_generator ~folder)
-	|> Iterable.iter (fun { rules ; other_generators } ->
-	       rules |> Iterable.iter record_rule;
+	|> It.map (fun rule_generator -> rule_generator ~folder)
+	|> It.iter (fun { rules ; other_generators } ->
+	       rules |> It.iter record_rule;
 	       aux other_generators)
       in
-      root_rule_generators |> Iterable.of_queue |> aux;
+      root_rule_generators |> It.of_queue |> aux;
       fun target ->
       assert (Log.dlog "Getting rule for target <%s>" (File.to_string target));
       try Some (Hashtbl.find rules_by_target target)
@@ -87,22 +89,22 @@ let has_rule target = try_get_rule target <> None
 let execute rule =
   let target_timestamp =
     rule.targets
-    |> Iterable.map Timestamp.get
-    |> Iterable.fold min max_float
+    |> It.map Timestamp.get
+    |> It.fold min max_float
   and source_timestamp =
     rule.sources
-    |> Iterable.map Timestamp.get
-    |> Iterable.fold max 0.
+    |> It.map Timestamp.get
+    |> It.fold max 0.
   in
   if target_timestamp < source_timestamp
   then begin
       rule.command ();
       rule.targets
-      |> Iterable.iter Timestamp.clear;
+      |> It.iter Timestamp.clear;
       assert begin
 	  rule.targets
-	  |> Iterable.map (fun target -> target, Timestamp.get target)
-	  |> Iterable.all
+	  |> It.map (fun target -> target, Timestamp.get target)
+	  |> It.all
                begin fun (target, target_timestamp) ->
                Utils.dcheck (target_timestamp +. 0.001 > source_timestamp)
                             "Source timestamp (%f) > target timestamp (%s:%f)."
@@ -120,7 +122,7 @@ let rec build target =
     let rule = mrule.rule in
     Log.block "Building <%s>" (File.to_string target)
               begin fun () ->
-              rule.sources |> Iterable.iter build;
+              rule.sources |> It.iter build;
               execute rule;
               assert (Utils.dcheck (not mrule.executed)
                                    "Cyclic dependency on <%s>?"

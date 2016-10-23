@@ -39,7 +39,7 @@ let modules =
     let line =
       match
         let f =
-          if CommonRules.Private.is_private ml_file then
+          if Private.is_private ml_file then
             fun command ->
             Process.run_command_cached
 	      ~cache_file: (ml_file |> File.with_ext (File.extension ml_file ^ ".modules"))

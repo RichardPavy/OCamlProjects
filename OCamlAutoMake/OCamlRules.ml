@@ -53,9 +53,7 @@
  *   >>>
  *)
 
-open OCamlBuild
 module It = Iterable
-module Private = CommonRules.Private
 
 (** Verifies that a file has the right extension. *)
 let dcheck_extension target extension =
@@ -89,7 +87,6 @@ let get_dependencies extension source =
       |> OCamlDep.ocamldep
       |> Iterable.of_list
       |> It.map (Canonical.module_to_dependency (File.parent source))
-      |> It.map snd
       |> It.map (File.with_ext extension)
     end |> It.of_lazy
 
@@ -202,7 +199,9 @@ let cmi_rule cmi_file =
       (File.to_string mli_file)
     |> ignore;
     (let open Utils.Option in ?>LinkedList.remove handle)
-  in { targets ; sources ; command }
+  in
+  let open OCamlMake in
+  { targets ; sources ; command }
 
 (**
  * A rule to build *.cmo and *.cmx files
@@ -222,7 +221,7 @@ let make_compiled_object_rule kind =
      let targets = It.singleton target
      and sources =
        [ It.singleton ml_file ;
-	 lazy begin if OCamlBuild.has_rule mli_file
+	 lazy begin if OCamlMake.has_rule mli_file
                     then target |> File.with_ext "cmi" |> It.singleton
                     else It.empty ()
               end |> It.of_lazy ;
@@ -242,6 +241,7 @@ let make_compiled_object_rule kind =
        |> ignore;
        (let open Utils.Option in ?>LinkedList.remove handle)
      in
+     let open OCamlMake in
      { targets ; sources ; command }
 
 let cmo_rule = make_compiled_object_rule `Bytecode
@@ -282,6 +282,7 @@ let make_ocaml_target_file_rule kind =
     |> ignore;
     (let open Utils.Option in ?>LinkedList.remove handle)
   in
+  let open OCamlMake in
   { targets ; sources ; command }
 
 let cma_rule = make_ocaml_target_file_rule `CMA
@@ -324,7 +325,7 @@ let ocaml_private_rules_generator ~folder =
 	      | _ -> It.empty ()
 	      end
     |> It.flatten
-    |> fun rules -> rule_generator_result ~rules ()
+    |> fun rules -> OCamlMake.rule_generator_result ~rules ()
     end
 
 (** Generates rules for the source folders. *)
@@ -360,7 +361,7 @@ let ocaml_public_rules_generator ~folder =
               | _ -> It.singleton (CommonRules.noop_rule file)
 	      end
     |> It.flatten
-    |> fun rules -> rule_generator_result ~rules ()
+    |> fun rules -> OCamlMake.rule_generator_result ~rules ()
     end
 
 let build_folder_rule_generator ~folder =
@@ -368,7 +369,7 @@ let build_folder_rule_generator ~folder =
                        "The build/ folder should be generated at the root only.");
   let rules = CommonRules.folder_rule (File.parse Private.private_folder)
               |> It.singleton in
-  rule_generator_result ~rules ()
+  OCamlMake.rule_generator_result ~rules ()
 
 let ocaml_rules_generator ~folder =
   Log.block
@@ -382,5 +383,5 @@ let ocaml_rules_generator ~folder =
           build_folder_rule_generator ] |> It.of_list
       else It.singleton ocaml_public_rules_generator
     in
-    rule_generator_result ~other_generators ()
+    OCamlMake.rule_generator_result ~other_generators ()
     end
