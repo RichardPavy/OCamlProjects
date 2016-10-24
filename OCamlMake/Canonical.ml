@@ -62,6 +62,18 @@ let canonical_module_to_canonical_ml_file canonical_module_name =
                    canonical_module_name
   end |> Private.to_private
 
+(**
+ * Returns the canonical folder from a canonical "container" module name.
+ * Example: Some_Package -> "build/Some/Package/" *)
+let canonical_module_to_dir canonical_module_name =
+  match Utils.split '_' canonical_module_name with
+  | [] -> Utils.fail "Utils.split should not return empty for '%c' and %S."
+                     '_' canonical_module_name |> raise
+  | folder -> folder
+              |> List.rev |> It.of_list |> Utils.join "/"
+              |> File.parse
+              |> Private.to_private
+
 let () =
   let open Private in
   assert (canonical_module_to_canonical_ml_file "ModuleX"
@@ -69,7 +81,7 @@ let () =
   assert (canonical_module_to_canonical_ml_file "Some_Package_ModuleX"
           = File.parsef "%s/Some/Package/Some_Package_ModuleX.ml" private_folder)
 
-type module_naming_convention = Relative | Absolute
+type module_naming_convention = Relative | Absolute | Package
 
 (** Returns:
  * a. whether the module name is canonical,
@@ -85,8 +97,12 @@ let module_to_convention_and_dependency folder module_name =
       (* Canonical package name used: Some_Package_ModuleX. *)
       Absolute, canonical_ml_file
     else
-      Utils.fail "Unable to resolve filename for dependency <%s>"
-                 module_name |> raise
+      let canonical_dir = canonical_module_to_dir module_name in
+      if OCamlMake.has_rule canonical_dir then
+        Package, canonical_dir
+      else
+        Utils.fail "Unable to resolve filename for dependency <%s>"
+                   module_name |> raise
 
 let module_to_dependency folder module_name =
   module_to_convention_and_dependency folder module_name
@@ -126,6 +142,11 @@ let private_ml_file_rule target =
             |> It.of_lazy
       end
   and command () =
+    let print_relative_module_alias module_name module_source =
+      Printf.sprintf "module %s = %s"
+                     module_name (File.basename module_source)
+    and print_package_alias module_name module_source = ""
+    in
     let module_aliases =
       begin if has_mli_file ()
             then HashSet.union (OCamlDep.ocamldep source |> It.of_list)
@@ -139,13 +160,14 @@ let private_ml_file_rule target =
                 in
                 module_name, module_naming_convention, module_source
                 end
-      |> It.filter begin fun (_, module_naming_convention, _) ->
-                   module_naming_convention = Relative
-                   end
-      |> It.map begin fun (module_name, _, module_source) ->
-                Printf.sprintf "module %s = %s"
-                               module_name (File.basename module_source)
+      |> It.map begin fun (module_name, module_naming_convention, module_source) ->
+                match module_naming_convention with
+                | Absolute -> None
+                | Relative -> Some (print_relative_module_alias module_name module_source)
+                | Package -> Some (print_package_alias module_name module_source)
                 end
+      |> It.filter (fun x -> x <> None)
+      |> It.map (fun x -> match x with Some y -> y | None -> failwith "Impossible")
       |> Utils.join "\n"
     in
     Process.run_command

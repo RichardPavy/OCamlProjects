@@ -7,9 +7,9 @@ DEPS = \
     Foldable \
     Utils \
     HashSet \
-    LinkedHashSet \
-    LinkedHashMap \
-    LinkedList \
+    ../Container/LinkedHashSet \
+    ../Container/LinkedHashMap \
+    ../Container/LinkedList \
     LruMap \
     Cache \
     File \
@@ -30,7 +30,7 @@ DEPS = \
 all: Make.exe
 
 $(OM:=.exe): $(DEPS:=.mli) $(DEPS:=.ml) #$(OM:=.mli) $(OM:=.ml)
-	ocamlfind opt -o $@ -linkpkg $(FLAGS) $^
+	ocamlfind opt -I ../Container -o $@ -linkpkg $(FLAGS) $^
 
 Make.exe: $(OM:=.exe)
 	make clean
