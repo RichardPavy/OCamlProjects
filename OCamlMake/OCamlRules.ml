@@ -123,15 +123,22 @@ let get_all_modules source =
   all_modules
 
 (** Include the source file's directory if necessary. *)
-let flag_include_dir file =
-  if File.is_toplevel file
-  then ""
-  else "-I " ^ (file |> File.parent |> File.to_string)
+let flag_include_dirs sources =
+  let flags = HashSet.create () in
+  sources
+  |> Iterable.iter begin fun source_file ->
+                   if not (File.is_toplevel source_file)
+                   then let flag = "-I " ^ (source_file |> File.parent |> File.to_string) in
+                        if not (HashSet.mem flags flag)
+                        then HashSet.add flags flag
+                   end;
+  HashSet.to_iterable flags |> Utils.join " "
 
 let () =
-  assert ("" = flag_include_dir (File.parse "File.ml"));
-  assert ("" = flag_include_dir (File.parse "/File.ml"));
-  assert ("-I package/folder" = flag_include_dir (File.parse "package/folder/File.ml"))
+  assert ("" = (File.parse "File.ml" |> Iterable.singleton |> flag_include_dirs));
+  assert ("" = (File.parse "/File.ml" |> Iterable.singleton |> flag_include_dirs));
+  assert ("-I package/folder" = (File.parse "package/folder/File.ml"
+                                 |> Iterable.singleton |> flag_include_dirs))
 
 type Flag.kind += Interface
 type Flag.kind += Object
@@ -188,13 +195,14 @@ let cmi_rule cmi_file =
     It.concat
       (It.singleton mli_file)
       (mli_file |> get_dependencies "cmi")
-  and command () =
+  in
+  let command () =
     let handle = add_package_flag ~kind: Interface
                                   ~source: mli_file
                                   ~target: cmi_file in
     Process.run_command
       "ocamlfind ocamlc %s %s -c %s"
-      (flag_include_dir mli_file)
+      (flag_include_dirs sources)
       (Flag.get Interface cmi_file)
       (File.to_string mli_file)
     |> ignore;
@@ -228,14 +236,15 @@ let make_compiled_object_rule kind =
          ml_file |> get_dependencies extension ]
        |> It.of_list
        |> It.flatten
-     and command () =
+     in
+     let command () =
        let handle = add_package_flag ~kind: Object
                                      ~source: ml_file
                                      ~target in
        Process.run_command
 	 "ocamlfind %s %s %s -c %s"
 	 compiler
-	 (flag_include_dir ml_file)
+         (flag_include_dirs sources)
          (Flag.get Object target)
 	 (File.to_string ml_file)
        |> ignore;
@@ -272,7 +281,7 @@ let make_ocaml_target_file_rule kind =
     Process.run_command
       "ocamlfind %s %s %s -o %s %s"
       compiler
-      (flag_include_dir target)
+      (flag_include_dirs sources)
       flags
       (File.to_string target)
       (ml_file
@@ -318,7 +327,8 @@ let ocaml_private_rules_generator ~folder =
 			  exe_rule (File.with_ext "exe" file) ]
                         |> It.of_list
               | _ when (File.is_root file |> not)
-                       && (Timestamp.kind file = Timestamp.Folder) ->
+                       && (Timestamp.kind file = Timestamp.Folder)
+                       && (File.to_string file <> Private.private_folder) ->
                  file |> Private.to_private
                       |> CommonRules.folder_rule
                       |> It.singleton

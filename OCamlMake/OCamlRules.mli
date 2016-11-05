@@ -3,7 +3,7 @@ val get_transitive_dependencies : string -> File.t -> File.t Iterable.t
 val get_all_modules : File.t -> string HashSet.t
 
 val dcheck_extension : File.t -> string -> bool
-val flag_include_dir : File.t -> string
+val flag_include_dirs : File.t Iterable.t -> string
 val add_package_flag :
   kind: Flag.kind ->
   source: File.t ->

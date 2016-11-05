@@ -7,9 +7,9 @@ DEPS = \
     Foldable \
     Utils \
     HashSet \
-    ../Container/LinkedHashSet \
-    ../Container/LinkedHashMap \
-    ../Container/LinkedList \
+    LinkedHashSet \
+    LinkedHashMap \
+    LinkedList \
     LruMap \
     Cache \
     File \
@@ -35,6 +35,7 @@ $(OM:=.exe): $(DEPS:=.mli) $(DEPS:=.ml) #$(OM:=.mli) $(OM:=.ml)
 Make.exe: $(OM:=.exe)
 	make clean
 	./$(OM:=.exe) -target $@
+	make clean
 
 clean:
 	rm -rf build/

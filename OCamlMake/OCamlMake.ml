@@ -36,45 +36,50 @@ let memoized_rule rule =
                                  rule.command () }
   }
 
-let try_get_rule =
-  (** Generates all the rules in a folder and indexes them by target. *)
-  let aux folder =
-    Log.block
-      "Generating rules for folder: <%s>" (File.to_string folder)
-      begin fun () ->
-      let rules_by_target = Hashtbl.create 16 in
-      let record_rule rule =
-        let mrule = memoized_rule rule in
-        mrule.rule.targets
-	|> It.iter
-	     begin fun target ->
-	     assert (Utils.dcheck (Hashtbl.mem rules_by_target target |> not)
-				  "Duplicate rule for target <%s>"
-				  (File.to_string target));
-	     assert (Utils.dcheck (target = folder || (File.parent target) = folder)
-				  "Target <%s> is not in the generated folder <%s>"
-				  (File.to_string target) (File.to_string folder));
-	     assert (Log.dlog "Adding rule for target <%s>" (File.to_string target));
-	     Hashtbl.add rules_by_target target mrule
-	     end
-      in
-      let rec aux generators =
-	generators
-	|> It.map (fun rule_generator -> rule_generator ~folder)
-	|> It.iter (fun { rules ; other_generators } ->
-	       rules |> It.iter record_rule;
-	       aux other_generators)
-      in
-      root_rule_generators |> It.of_queue |> aux;
-      fun target ->
-      assert (Log.dlog "Getting rule for target <%s>" (File.to_string target));
-      try Some (Hashtbl.find rules_by_target target)
-      with Not_found -> None
-      end
-  in
-  let aux_cached = Cache.fn ~max_size: 100 aux
-  in
-  fun target -> aux_cached (File.parent target) target
+(** Generates all the rules in a folder and indexes them by target. *)
+let get_rules_nocache folder =
+  Log.block
+    "Generating rules for folder: <%s>" (File.to_string folder)
+    begin fun () ->
+    let rules_by_target = Hashtbl.create 16 in
+    let record_rule rule =
+      let mrule = memoized_rule rule in
+      mrule.rule.targets
+      |> It.iter
+	   begin fun target ->
+	   assert (Utils.dcheck (Hashtbl.mem rules_by_target target |> not)
+				"Duplicate rule for target <%s>"
+				(File.to_string target));
+	   assert (Utils.dcheck (target = folder || (File.parent target) = folder)
+				"Target <%s> is not in the generated folder <%s>"
+				(File.to_string target) (File.to_string folder));
+	   assert (Log.dlog "Adding rule for target <%s>" (File.to_string target));
+	   Hashtbl.add rules_by_target target mrule
+	   end
+    in
+    let rec aux generators =
+      generators
+      |> It.map (fun rule_generator -> rule_generator ~folder)
+      |> It.iter (fun { rules ; other_generators } ->
+	     rules |> It.iter record_rule;
+	     aux other_generators)
+    in
+    root_rule_generators |> It.of_queue |> aux;
+    rules_by_target
+    end
+
+let get_rules = Cache.fn ~max_size: 100 get_rules_nocache
+
+let get_targets folder =
+  folder
+  |> get_rules
+  |> Iterable.of_hashtbl
+  |> Iterable.map fst
+
+let try_get_rule target =
+  assert (Log.dlog "Getting rule for target <%s>" (File.to_string target));
+  try Some (Hashtbl.find (target |> File.parent |> get_rules) target)
+  with Not_found -> None
 
 let get_rule target =
   match try_get_rule target with

@@ -26,5 +26,6 @@ clean:
 	find . -type f -name '*.dependencies' -exec rm {} +
 	find . -type f -name '*.modules' -exec rm {} +
 	find Static/Files -type f -name '*.ml' -exec rm {} +
+	rm -rf build/
 
 .PHONY: server test clean

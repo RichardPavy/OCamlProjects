@@ -145,7 +145,25 @@ let private_ml_file_rule target =
     let print_relative_module_alias module_name module_source =
       Printf.sprintf "module %s = %s"
                      module_name (File.basename module_source)
-    and print_package_alias module_name module_source = ""
+    and print_package_alias module_name module_source =
+      Printf.sprintf
+        "module %s %s\n%s\nend"
+        module_name
+        (if File.extension source = "ml"
+         then "= struct"
+         else ": sig")
+        (module_source
+         |> OCamlMake.get_targets
+         |> Iterable.filter (Predicate.extension "cmo")
+         |> Iterable.map File.basename
+         |> Iterable.map
+              begin fun sub_module ->
+              Printf.sprintf
+                "  module %s = %s"
+                (canonical_module_to_dir sub_module |> File.basename)
+                sub_module
+              end
+         |> Utils.join "\n")
     in
     let module_aliases =
       begin if has_mli_file ()
@@ -170,13 +188,18 @@ let private_ml_file_rule target =
       |> It.map (fun x -> match x with Some y -> y | None -> failwith "Impossible")
       |> Utils.join "\n"
     in
-    Process.run_command
-      "echo \"%s\" > %s ; cat %s >> %s"
-      module_aliases
-      (File.to_string target)
-      (File.to_string source)
-      (File.to_string target)
-    |> ignore
+    begin if module_aliases = ""
+          then Process.run_command
+                 "cp %s %s"
+                 (File.to_string source)
+                 (File.to_string target)
+          else Process.run_command
+                 "echo \"%s\" > %s ; cat %s >> %s"
+                 module_aliases
+                 (File.to_string target)
+                 (File.to_string source)
+                 (File.to_string target)
+    end |> ignore
   in
   let open OCamlMake in
   { targets ; sources ; command }

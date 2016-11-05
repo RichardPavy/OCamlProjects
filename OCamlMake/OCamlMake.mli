@@ -19,4 +19,5 @@ val rule_generator_result :
 val add_root_rule_generator : rule_generator -> unit
 
 val has_rule : File.t -> bool
+val get_targets : File.t -> File.t Iterable.t
 val build : File.t -> unit
