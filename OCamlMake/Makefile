@@ -1,19 +1,19 @@
 FLAGS = -package unix,str
 
-OM = OCamlMake
+OM = Bootstrap
 DEPS = \
-    Log \
-    Iterable \
-    Foldable \
-    Utils \
-    HashSet \
-    LinkedHashSet \
-    LinkedHashMap \
-    LinkedList \
-    LruMap \
-    Cache \
-    File \
-    Predicate \
+    ../Utils/Log Bootstrap/Utils_Log \
+    ../Utils/Iterable Bootstrap/Utils_Iterable \
+    ../Utils/Foldable \
+    ../Utils/Utils \
+    ../Container/HashSet \
+    ../Container/LinkedHashSet \
+    ../Container/LinkedHashMap \
+    ../Container/LinkedList \
+    ../Container/LruMap \
+    ../Utils/Cache \
+    ../Utils/File \
+    ../Utils/Predicate \
     Timestamp \
     Process \
     Property \
@@ -27,10 +27,15 @@ DEPS = \
     OCamlRules \
     Make
 
+INCLUDE_DIRS = \
+    -I ../Container \
+    -I ../Utils \
+    -I Bootstrap
+
 all: Make.exe
 
-$(OM:=.exe): $(DEPS:=.mli) $(DEPS:=.ml) #$(OM:=.mli) $(OM:=.ml)
-	ocamlfind opt -I ../Container -o $@ -linkpkg $(FLAGS) $^
+$(OM:=.exe): $(foreach dep, $(DEPS), -intf $(dep).mli $(dep).ml)
+	ocamlfind opt $(INCLUDE_DIRS) -o $@ -linkpkg $(FLAGS) $^
 
 Make.exe: $(OM:=.exe)
 	make clean
