@@ -1,3 +1,5 @@
+module LruMap = Container_LruMap
+
 type 'a result = Value of 'a | Exn of exn
 type ('a, 'b) cache_fn = { fn: 'a -> 'b; clear: 'a -> unit }
 

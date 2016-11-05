@@ -1,3 +1,7 @@
+module File = Utils_File
+module Log = Utils_Log
+module Utils = Utils_Utils
+
 let run_command_aux format cb =
   Printf.ksprintf
     begin fun command ->

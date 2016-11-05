@@ -1,3 +1,13 @@
+module HashSet = Container_HashSet
+module LinkedList = Container_LinkedList
+module LinkedHashSet = Container_LinkedHashSet
+
+module Cache = Utils_Cache
+module File = Utils_File
+module Iterable = Utils_Iterable
+module Log = Utils_Log
+module Utils = Utils_Utils
+
 (* #load "OCamlBuild.cma";; #directory "build";; *)
 
 (**

@@ -1,3 +1,6 @@
+module Iterable = Utils_Iterable
+module Utils = Utils_Utils
+
 type 'a t = { queue : 'a Queue.t ;
 	      set : ('a, unit) Hashtbl.t }
 

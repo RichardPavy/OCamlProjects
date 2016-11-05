@@ -1,3 +1,6 @@
+module Iterable = Utils_Iterable
+module Utils = Utils_Utils
+
 type 'a t = ('a, unit) Hashtbl.t
 let create () = Hashtbl.create 16
 let add set value =

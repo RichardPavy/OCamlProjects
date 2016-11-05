@@ -1,3 +1,9 @@
+module Cache = Utils_Cache
+module File = Utils_File
+module HashSet = Container_HashSet
+module Iterable = Utils_Iterable
+module Log = Utils_Log
+
 let { Cache.fn = get_files_with_base ;
       Cache.clear = clear_files_with_base } =
   Cache.make (fun _ -> HashSet.create ())

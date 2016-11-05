@@ -1,3 +1,10 @@
+module HashSet = Container_HashSet
+
+module File = Utils_File
+module Iterable = Utils_Iterable
+module Predicate = Utils_Predicate
+module Utils = Utils_Utils
+
 module It = Iterable
 
 (**

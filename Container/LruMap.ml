@@ -70,7 +70,7 @@ let () =
 	       put lru_map "key2" "second";
 	       put lru_map "key3" "third";
 	       lru_map
-	       |> to_iterable |> Iterable.to_list
+	       |> to_iterable |> Utils_Iterable.to_list
 	     and actual = [ ("key1", "first") ;
 			    ("key2", "second") ;
 			    ("key3", "third") ]
@@ -84,7 +84,7 @@ let () =
 	put lru_map "key3" "third";
 	assert (get lru_map "key2" = "second");
 	lru_map
-	|> to_iterable |> Iterable.to_list
+	|> to_iterable |> Utils_Iterable.to_list
       and actual = [ ("key1", "first") ;
 		     ("key3", "third") ;
 		     ("key2", "second") ]
@@ -99,7 +99,7 @@ let () =
 	assert (get lru_map "key1" = "first");
 	put lru_map "key4" "fourth";
 	lru_map
-	|> to_iterable |> Iterable.to_list
+	|> to_iterable |> Utils_Iterable.to_list
       and actual = [ ("key3", "third") ;
 		     ("key1", "first") ;
 		     ("key4", "fourth") ]

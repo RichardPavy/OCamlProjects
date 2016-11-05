@@ -1,4 +1,8 @@
-module It = Iterable
+module Cache = Utils_Cache
+module File = Utils_File
+module It = Utils_Iterable
+module Log = Utils_Log
+module Utils = Utils_Utils
 
 type rule = { targets: File.t It.t;
 	      sources: File.t It.t;
@@ -73,8 +77,8 @@ let get_rules = Cache.fn ~max_size: 100 get_rules_nocache
 let get_targets folder =
   folder
   |> get_rules
-  |> Iterable.of_hashtbl
-  |> Iterable.map fst
+  |> It.of_hashtbl
+  |> It.map fst
 
 let try_get_rule target =
   assert (Log.dlog "Getting rule for target <%s>" (File.to_string target));

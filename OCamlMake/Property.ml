@@ -1,7 +1,10 @@
-module LL = LinkedList
+module Cache = Utils_Cache
+module File = Utils_File
+module Iterable = Utils_Iterable
+module LL = Container_LinkedList
 
 type 'a generator = File.t -> 'a Iterable.t
-type 'a handle = 'a generator LinkedList.handle
+type 'a handle = 'a generator LL.handle
 type 'a t =
   { add: ?package: File.t ->
          'a generator ->

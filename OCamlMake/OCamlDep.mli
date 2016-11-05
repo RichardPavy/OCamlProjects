@@ -1,2 +1,2 @@
-val modules : File.t -> string list
-val ocamldep : File.t -> string list
+val modules : Utils_File.t -> string list
+val ocamldep : Utils_File.t -> string list

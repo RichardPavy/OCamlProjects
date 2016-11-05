@@ -1,3 +1,8 @@
+module Cache = Utils_Cache
+module File = Utils_File
+module Iterable = Utils_Iterable
+module Log = Utils_Log
+
 let args () =
   let target = ref ""
   and debug = ref false in

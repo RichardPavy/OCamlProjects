@@ -1,3 +1,5 @@
+module Iterable = Utils_Iterable
+
 type 'a node = { mutable prev: 'a node ;
                  v: 'a ;
                  mutable next: 'a node }

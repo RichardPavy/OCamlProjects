@@ -1,3 +1,8 @@
+module Cache = Utils_Cache
+module File = Utils_File
+module Iterable = Utils_Iterable
+module Predicate = Utils_Predicate
+
 type kind = ..
 
 let flags = Cache.fn (fun (* kind *) _ -> Property.create ())
@@ -23,4 +28,4 @@ let add_file ~kind ~file ~generator =
 
 let get kind ?(sep = " ") target =
   (flags kind).Property.get target
-  |> Utils.join sep
+  |> Utils_Utils.join sep
