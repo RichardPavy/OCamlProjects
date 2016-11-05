@@ -1,6 +1,4 @@
-module File = Utils_File
-module Log = Utils_Log
-module Utils = Utils_Utils
+open Utils
 
 let run_command_aux format cb =
   Printf.ksprintf

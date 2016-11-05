@@ -1,7 +1,4 @@
-module Cache = Utils_Cache
-module File = Utils_File
-module Iterable = Utils_Iterable
-module Predicate = Utils_Predicate
+open Utils
 
 type kind = ..
 

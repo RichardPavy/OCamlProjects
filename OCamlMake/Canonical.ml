@@ -1,9 +1,5 @@
-module HashSet = Container_HashSet
-
-module File = Utils_File
-module Iterable = Utils_Iterable
-module Predicate = Utils_Predicate
-module Utils = Utils_Utils
+open Utils
+open Container
 
 module It = Iterable
 
@@ -88,7 +84,7 @@ let () =
   assert (canonical_module_to_canonical_ml_file "Some_Package_ModuleX"
           = File.parsef "%s/Some/Package/Some_Package_ModuleX.ml" private_folder)
 
-type module_naming_convention = Relative | Absolute | Package
+type module_naming_convention = Relative | Absolute | Package | Builtin
 
 (** Returns:
  * a. whether the module name is canonical,
@@ -108,8 +104,7 @@ let module_to_convention_and_dependency folder module_name =
       if OCamlMake.has_rule canonical_dir then
         Package, canonical_dir
       else
-        Utils.fail "Unable to resolve filename for dependency <%s>"
-                   module_name |> raise
+        Builtin, File.root
 
 let module_to_dependency folder module_name =
   module_to_convention_and_dependency folder module_name
@@ -187,7 +182,7 @@ let private_ml_file_rule target =
                 end
       |> It.map begin fun (module_name, module_naming_convention, module_source) ->
                 match module_naming_convention with
-                | Absolute -> None
+                | Absolute | Builtin -> None
                 | Relative -> Some (print_relative_module_alias module_name module_source)
                 | Package -> Some (print_package_alias module_name module_source)
                 end

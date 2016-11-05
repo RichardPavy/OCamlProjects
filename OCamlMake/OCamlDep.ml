@@ -1,9 +1,5 @@
-module Cache = Utils_Cache
-module File = Utils_File
+open Utils
 module HashSet = Container_HashSet
-module Iterable = Utils_Iterable
-module Predicate = Utils_Predicate
-module Utils = Utils_Utils
 
 type Flag.kind += OCamlDep
 

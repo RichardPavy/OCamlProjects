@@ -1,8 +1,6 @@
-module Cache = Utils_Cache
-module File = Utils_File
-module It = Utils_Iterable
-module Log = Utils_Log
-module Utils = Utils_Utils
+open Utils
+
+module It = Iterable
 
 type rule = { targets: File.t It.t;
 	      sources: File.t It.t;

@@ -1,12 +1,5 @@
-module HashSet = Container_HashSet
-module LinkedList = Container_LinkedList
-module LinkedHashSet = Container_LinkedHashSet
-
-module Cache = Utils_Cache
-module File = Utils_File
-module Iterable = Utils_Iterable
-module Log = Utils_Log
-module Utils = Utils_Utils
+open Utils
+open Container
 
 (* #load "OCamlBuild.cma";; #directory "build";; *)
 
@@ -30,8 +23,8 @@ module Utils = Utils_Utils
  * 2. How a module can be referenced:
  *
  * 2.a) by relative name, for modules in the same package
- * This means that for any module using other modules in the same package, the following
- * declarations are added at the top:
+ * This means that for any module using other modules in the same package, the
+ * following declarations are added at the top:
  * file <Protocol/Rpc.ml> depends on module names 'JsonProtocol' and 'HtmlProtocol',
  * file <build/Protocol/Rpc.ml> will be like:
  *   <<<
@@ -97,6 +90,7 @@ let get_dependencies extension source =
       |> OCamlDep.ocamldep
       |> Iterable.of_list
       |> It.map (Canonical.module_to_dependency (File.parent source))
+      |> It.filter ((<>) File.root)
       |> It.map (File.with_ext extension)
     end |> It.of_lazy
 
@@ -138,7 +132,10 @@ let flag_include_dirs sources =
   sources
   |> Iterable.iter begin fun source_file ->
                    if not (File.is_toplevel source_file)
-                   then let flag = "-I " ^ (source_file |> File.parent |> File.to_string) in
+                   then let flag = "-I " ^ (source_file
+                                            |> File.parent
+                                            |> File.to_string)
+                        in
                         if not (HashSet.mem flags flag)
                         then HashSet.add flags flag
                    end;

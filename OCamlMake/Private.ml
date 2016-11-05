@@ -1,5 +1,4 @@
-module File = Utils_File
-module Utils = Utils_Utils
+open Utils
 
 let private_folder = "build"
 

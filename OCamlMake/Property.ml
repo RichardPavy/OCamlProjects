@@ -1,6 +1,4 @@
-module Cache = Utils_Cache
-module File = Utils_File
-module Iterable = Utils_Iterable
+open Utils
 module LL = Container_LinkedList
 
 type 'a generator = File.t -> 'a Iterable.t

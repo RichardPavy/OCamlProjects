@@ -1,3 +1,6 @@
+module Iterable = Utils_Iterable
+module Utils = Utils_Utils
+
 type ('k, 'v) t = { queue : ('k * 'v) Queue.t ;
 		    map : ('k, 'v) Hashtbl.t }
 
