@@ -1,7 +1,7 @@
 open Lwt.Infix
 open SyncTypes
 
-let name = Utils.gen_uuid ()
+let name = Sync_Utils_UUID.gen_uuid ()
 
 let ip, port =
   let ip = ref "127.0.0.1" in
@@ -9,7 +9,7 @@ let ip, port =
   let specs = [ "ip", Arg.Set_string ip, "<ip> IP address" ;
 		"port", Arg.Set_int port, "<port> Port number" ]
   in
-  CommandLine.parse specs;
+  Sync_Utils_CommandLine.parse specs;
   !ip, !port
 
 let create_root ~ip ~port =
@@ -35,7 +35,7 @@ let serve connection =
 	| exn -> Lwt.fail exn
       end
   in
-  Utils.async "Serve connection" run
+  Sync_Utils_AsyncUtils.async "Serve connection" run
 
 let start ?(name = name) ?(ip = ip) ?(port = port) () =
   Rpc.establish_server

@@ -1,30 +1,31 @@
 open Lwt.Infix
 open SyncTypes
 
-module DummyProtocol : Protocol.Sig =
-  struct
-    exception DummyProtocol of string
-    include
-      Protocol.Make
-	(struct
-	  type 'a request = unit
-	  type 'a response = unit
-	  let prefix = '\000'
-	  let read_request _ = raise (DummyProtocol "read_request")
-	  let write_request _ = raise (DummyProtocol "write_request")
-	  let read_response _ = raise (DummyProtocol "read_response")
-	  let write_response _ = raise (DummyProtocol "write_response")
-	  let get_operation _ = raise (DummyProtocol "get_operation")
-	  let default_settings = Protocol.default_settings
-	end)
-	(struct
-	  type 'a value = unit
-	  type 'a serialized = unit
-	  let wrap_value _ = raise (DummyProtocol "wrap_value")
-	  let wrap_exn _ = raise (DummyProtocol "wrap_exn")
-	  let unwrap_value _ = raise (DummyProtocol "unwrap_value")
-	end)
-  end
+module AsyncUtils = Sync_Utils_AsyncUtils
+
+module DummyProtocol : Protocol.Sig = struct
+  exception DummyProtocol of string
+  include
+    Protocol.Make
+      (struct
+	type 'a request = unit
+	type 'a response = unit
+	let prefix = '\000'
+	let read_request _ = raise (DummyProtocol "read_request")
+	let write_request _ = raise (DummyProtocol "write_request")
+	let read_response _ = raise (DummyProtocol "read_response")
+	let write_response _ = raise (DummyProtocol "write_response")
+	let get_operation _ = raise (DummyProtocol "get_operation")
+	let default_settings = Protocol.default_settings
+      end)
+      (struct
+	type 'a value = unit
+	type 'a serialized = unit
+	let wrap_value _ = raise (DummyProtocol "wrap_value")
+	let wrap_exn _ = raise (DummyProtocol "wrap_exn")
+	let unwrap_value _ = raise (DummyProtocol "unwrap_value")
+      end)
+end
 
 let protocols = Array.make 256 (module DummyProtocol : Protocol.Sig)
 let register_protocol (module P : Protocol.Sig) =
@@ -116,12 +117,12 @@ let establish_server ?buffer_size ?(backlog = 5) ~ip ~port root callback =
 	     | _ -> Lwt.return_unit
 	     end
        in
-       Utils.async (Printf.sprintf "Server %s:%i shutdown." ip port)
-		   close_server_socket;
+       AsyncUtils.async "Server %s:%i shutdown." ip port
+		        close_server_socket;
        Lwt_io.eprintlf "Server %s:%i is down." ip port
        >|= fun () -> Lwt.wakeup onshutdown_wakener ()
   in
-  Utils.async "server loop" loop;
+  AsyncUtils.async "server loop" loop;
   root
 
 let open_connection ?buffer_size ~ip ~port root =
