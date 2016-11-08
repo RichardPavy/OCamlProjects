@@ -1,6 +1,8 @@
 open SyncTypes
 open Lwt.Infix
 
+module AsyncUtils = Sync_Utils_AsyncUtils
+
 type 'response resource = 'response Lwt.t * 'response Lwt.u
 type 'response key = 'response resource Pool.key
 type ('request, 'response, 'serialized_response) message =
@@ -61,7 +63,7 @@ module Make =
 	end
 
     let respond connection =
-      Utils.async
+      AsyncUtils.async
 	"AsyncProtocol.respond" begin
 	  fun () ->
 	  read_request connection.input

@@ -9,6 +9,13 @@ type 'a t = (module Impl with type element = 'a)
 
 let fold (type e) (module M : Impl with type element = e) = M.fold
 
+let cycle (type e) e =
+  let module M = struct
+      type element = e
+      let rec fold f accu = fold f (f accu e)
+    end
+  in (module M : Impl with type element = e)
+
 let of_list (type e) l =
   let module M = struct
       type element = e
@@ -69,12 +76,6 @@ let map (type e) (type e')
 			       accu
     end
   in (module M' : Impl with type element = e')
-
-module type TopableImpl =
-  sig
-    type element
-    exception Break of element list
-  end
 
 exception Top
 let top (type e)
@@ -140,4 +141,10 @@ let () =
   assert begin
       fold ([ 1 ; 2 ; 3 ; 4 ; 5 ] |> of_list |> top 10) (+) 0
       = 15
+    end;
+  assert begin
+      fold
+        (cycle "X" |> top 10)
+        ( ^ ) ""
+      = "XXXXXXXXXX"
     end

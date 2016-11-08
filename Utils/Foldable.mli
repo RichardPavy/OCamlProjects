@@ -1,6 +1,6 @@
 type 'e t
 val fold : 'e t -> ('accu -> 'e -> 'accu) -> 'accu -> 'accu
-val of_list : 'e list -> 'e t
+val cycle : 'e -> 'e t
 val of_array : 'e array -> 'e t
 val of_queue : 'e Queue.t -> 'e t
 val of_hashtbl : ('k, 'v) Hashtbl.t -> ('k * 'v) t

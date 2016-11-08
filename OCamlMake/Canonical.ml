@@ -149,7 +149,7 @@ let private_ml_file_rule target =
                      module_name (File.basename module_source)
     and print_package_alias module_name module_source =
       Printf.sprintf
-        "module %s %s\n%s\nend"
+        "module %s %s %s end"
         module_name
         (if File.extension source = "ml"
          then "= struct"
@@ -165,7 +165,7 @@ let private_ml_file_rule target =
                 (canonical_module_to_dir sub_module |> File.basename)
                 sub_module
               end
-         |> Utils.join "\n")
+         |> Utils.join " ")
     in
     let module_aliases =
       begin if has_mli_file ()
@@ -188,7 +188,7 @@ let private_ml_file_rule target =
                 end
       |> It.filter (fun x -> x <> None)
       |> It.map (fun x -> match x with Some y -> y | None -> failwith "Impossible")
-      |> Utils.join "\n"
+      |> Utils.join " "
     in
     begin if module_aliases = ""
           then Process.run_command

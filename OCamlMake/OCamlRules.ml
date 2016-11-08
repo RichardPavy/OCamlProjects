@@ -159,6 +159,7 @@ type Flag.kind += Executable
 let add_package_flag =
   let module_to_package =
     [ "Lwt", "lwt" ;
+      "Lwt", "lwt.unix" ;
       "Unix", "unix" ;
       "Str", "str" ;
       "Yojson", "yojson" ] |> It.of_list

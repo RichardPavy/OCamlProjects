@@ -43,15 +43,15 @@ let shutdown_fd wakener fd =
 	Lwt.wakeup wakener ();
 	Lwt.catch
 	  begin fun () ->
-		Lwt.finalize
-		  (fun () -> Lwt_unix.close fd)
-		  (fun () -> Lwt.catch
-			       (fun () -> Lwt.wrap2 Lwt_unix.shutdown fd Unix.SHUTDOWN_ALL)
-			       (fun exn -> Lwt.return_unit))
+	  Lwt.finalize
+	    (fun () -> Lwt_unix.close fd)
+	    (fun () -> Lwt.catch
+			 (fun () -> Lwt.wrap2 Lwt_unix.shutdown fd Unix.SHUTDOWN_ALL)
+			 (fun exn -> Lwt.return_unit))
 	  end
 	  begin fun exn ->
-		Lwt_io.eprintlf "Exception when closing connection %s"
-				(Printexc.to_string exn)
+	  Lwt_io.eprintlf "Exception when closing connection %s"
+			  (Printexc.to_string exn)
 	  end
       end
   and once = ref false in
