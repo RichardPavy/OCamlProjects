@@ -1,6 +1,18 @@
+module type Impl = sig
+  type element
+  val fold : ('accu -> element -> 'accu)
+	     -> 'accu
+	     -> 'accu
+end
+
 type 'e t
-val fold : 'e t -> ('accu -> 'e -> 'accu) -> 'accu -> 'accu
+
+val make : (module Impl with type element = 'e) -> 'e t
+
+val fold : ('accu -> 'e -> 'accu) -> 'accu -> 'e t -> 'accu
 val cycle : 'e -> 'e t
+val singleton : 'e -> 'e t
+val of_list : 'e list -> 'e t
 val of_array : 'e array -> 'e t
 val of_queue : 'e Queue.t -> 'e t
 val of_hashtbl : ('k, 'v) Hashtbl.t -> ('k * 'v) t

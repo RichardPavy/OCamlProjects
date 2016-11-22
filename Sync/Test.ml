@@ -14,9 +14,9 @@ let () =
 	struct
 	  module Y = Yojson.Basic
 	  module M = Map.Make(struct
-				 type t = string
-				 let compare = Pervasives.compare
-			       end)
+			       type t = string
+			       let compare = Pervasives.compare
+			     end)
 	  module JsonOp = Operations.Json
 
 	  type test_case = {
@@ -35,29 +35,34 @@ let () =
 	    if Lwt_unix.fork () = 0
 	    then Lwt_main.run
 		   begin
-		     Lwt.async (fun () -> Lwt_unix.sleep test_timeout
-					  >>= fun () -> Lwt_io.eprintlf
-							  "FAIL: On %s:%i, test timeout exceeded: %0.2fs"
-							  name port test_timeout
-					  >>= fun () -> Lwt_io.flush Lwt_io.stderr
-					  >>= fun () -> exit 0);
+		     Lwt.async
+                       begin fun () ->
+                       Lwt_unix.sleep test_timeout
+		       >>= fun () -> Lwt_io.eprintlf
+				       "FAIL: On %s:%i, test timeout exceeded: %0.2fs"
+				       name port test_timeout
+		       >>= fun () -> Lwt_io.flush Lwt_io.stderr
+		       >>= fun () -> exit 0
+                       end;
 		     Lwt_io.printlf "Starting server %s" name
-		     >>= (fun () -> let { server } = Server.start ~name ~ip:test_ip ~port () in
-				    Utils.async
-				      (Printf.sprintf "Killing server %s:%i" name port)
-				      (fun () -> server.onshutdown >>= (fun () -> exit 0));
-				    (* Wait forever. *)
-				    let waiter, _ = Lwt.wait () in waiter)
-		   end
+		     >>= begin fun () ->
+                         let { server } = Server.start ~name ~ip:test_ip ~port () in
+			 Utils.async
+			   (Printf.sprintf "Killing server %s:%i" name port)
+			   (fun () -> server.onshutdown >>= (fun () -> exit 0));
+			 (* Wait forever. *)
+			 let waiter, _ = Lwt.wait () in waiter
+                         end
+                   end
 
 	  (** Opens connections to servers running on [test_ip] and on the given ports. *)
 	  let open_connections ports =
 	    let root = Server.create_root ~ip:"fake" ~port:(-1) in
 	    Lwt_list.map_s
 	      begin fun (name, port) ->
-		    Lwt_io.printlf "Open connection %s on %s:%i" name test_ip port
-		    >>= (fun () -> Rpc.open_connection ~ip:test_ip ~port root)
-		    >|= fun connection -> name, { connection with peer_name = name }
+	      Lwt_io.printlf "Open connection %s on %s:%i" name test_ip port
+	      >>= fun () -> Rpc.open_connection ~ip:test_ip ~port root
+	      >|= fun connection -> name, { connection with peer_name = name }
 	      end
 	      ports
 
@@ -71,9 +76,9 @@ let () =
 	    let servers =
 	      List.fold_left
 		begin fun servers test_case ->
-		      if M.mem test_case.connection servers
-		      then servers
-		      else M.add test_case.connection (8080 + M.cardinal servers) servers
+		if M.mem test_case.connection servers
+		then servers
+		else M.add test_case.connection (8080 + M.cardinal servers) servers
 		end
 		M.empty
 		test_cases
@@ -96,7 +101,7 @@ let () =
 	    in
 	    let test_cases =
 	      list_map begin fun test_case ->
-			     { test_case with query = resolve_port test_case.query }
+		       { test_case with query = resolve_port test_case.query }
 		       end
 		       test_cases
 	    in
@@ -104,64 +109,69 @@ let () =
 	    let call connection test =
 	      Lwt.catch
 		begin fun () ->
-		      let call_aux =
-			match !settings with
-			| None -> JsonProtocol.Sync.call connection
-			| Some settings -> JsonProtocol.Sync.call ~settings connection
-		      in call_aux test.query
+		let call_aux =
+		  match !settings with
+		  | None -> JsonProtocol.Sync.call connection
+		  | Some settings -> JsonProtocol.Sync.call ~settings connection
+		in call_aux test.query
 		end
 		begin fun exn ->
-		      let open Y.Util in
-		      ExnTranslator.to_json exn |> (member "exn_value") |> Lwt.return
+		let open Y.Util in
+		ExnTranslator.to_json exn |> (member "exn_value") |> Lwt.return
 		end
 	    in
 
 	    (* Run the test cases. *)
 	    let servers = M.bindings servers in
 	    Lwt_io.flush_all ()
-	    >>= (fun () -> List.iter (fun (name, port) -> run_test_server name port) servers;
-			   Lwt_unix.sleep 0.3)
+	    >>= begin fun () ->
+                List.iter (fun (name, port) -> run_test_server name port) servers;
+		Lwt_unix.sleep 0.3
+                end
 	    >>= (fun () -> open_connections servers)
-	    >>= (fun connections_list ->
-		 Lwt.finalize
-		   begin fun () ->
-			 (* Map from test server name to connection. *)
-			 let connections =
-			   List.fold_left
-			     (fun connections (name, connection) -> M.add name connection connections)
-			     M.empty
-			     connections_list
-			 in
-			 Lwt_list.iter_s
-			   (* For each test case. *)
-			   begin fun t ->
-				 Lwt_io.printlf "\ttest case: %s" (Y.to_string t.query)
-				 >>= begin fun () ->
-					   (* Send the test query to the test server. *)
-					   let connection = M.find t.connection connections in
-					   call connection t
-				     end
-				 >>= begin fun response ->
-					   if response = t.response
-					   then Lwt.return_unit
-					   else (incr errors;
-						 Lwt_io.eprintlf
-						   "FAIL    expected %s, but got %s"
-						   (Y.to_string t.response) (Y.to_string response))
-				     end
-			   end
-			   test_cases
-		   end
-		   begin fun () ->
-			 Lwt_list.iter_p
-			   begin fun (name, connection) ->
-				 Lwt_io.printlf "Killing %s" name
-				 >>= fun () -> JsonProtocol.Sync.write_request
-						 connection.output
-						 JsonOp.kill
-			   end
-			   connections_list
-		   end)
+	    >>= begin fun connections_list ->
+	        Lwt.finalize
+		  begin fun () ->
+		  (* Map from test server name to connection. *)
+		  let connections =
+		    List.fold_left
+		      (fun connections (name, connection) -> M.add name connection connections)
+		      M.empty
+		      connections_list
+		  in
+		  Lwt_list.iter_s
+		    (* For each test case. *)
+		    begin fun t ->
+		    Lwt_io.printlf "\ttest case: %s" (Y.to_string t.query)
+		    >>= begin fun () ->
+		        (* Send the test query to the test server. *)
+		        let connection = M.find t.connection connections in
+		        call connection t
+		        end
+		    >>= begin fun response ->
+		        if response = t.response
+		        then Lwt.return_unit
+		        else (incr errors;
+			      Lwt_io.eprintlf
+			        "FAIL    expected %s, but got %s"
+			        (Y.to_string t.response) (Y.to_string response))
+		        end
+		    end
+		    test_cases
+		  end
+                  begin fun () ->
+		  Lwt_list.iter_p
+		    begin fun (name, connection) ->
+		    Lwt_io.printlf "Killing %s" name
+		    >>= begin fun () ->
+                        JsonProtocol.Sync.write_request
+			  connection.output
+			  JsonOp.kill
+		        end
+                    end
+		    connections_list
+		  end
+                end
 
 	  module TestJsonOp =
 	    struct
@@ -177,10 +187,10 @@ let () =
 		JsonProtocol.register_operation
 		  "peer_name"
 		  begin fun message connection ->
-			let open Y.Util in
-			let peer_name = message |> (member "peer_name") |> to_string in
-			let peer = Hashtbl.find connection.root.connections peer_name in
-			Lwt.return (`Assoc [ "result", `String peer.peer_name ])
+		  let open Y.Util in
+		  let peer_name = message |> (member "peer_name") |> to_string in
+		  let peer = Hashtbl.find connection.root.connections peer_name in
+		  Lwt.return (`Assoc [ "result", `String peer.peer_name ])
 		  end
 	      let peer_name peer_name =
 		`Assoc [ "operation", `String "peer_name" ;
@@ -190,12 +200,12 @@ let () =
 		JsonProtocol.register_operation
 		  "my_name"
 		  begin fun message connection ->
-			let open Y.Util in
-			let peer_name = message |> (member "peer_name") |> to_string in
-			let root_to_peer = Hashtbl.find connection.root.connections peer_name in
-			NativeProtocol.Async.call root_to_peer
-						  (fun peer_to_root -> Lwt.return peer_to_root.peer_name)
-			>|= fun root_name -> `Assoc [ "result", `String root_name ]
+		  let open Y.Util in
+		  let peer_name = message |> (member "peer_name") |> to_string in
+		  let root_to_peer = Hashtbl.find connection.root.connections peer_name in
+		  NativeProtocol.Async.call root_to_peer
+					    (fun peer_to_root -> Lwt.return peer_to_root.peer_name)
+		  >|= fun root_name -> `Assoc [ "result", `String root_name ]
 		  end
 	      let my_name peer_name =
 		`Assoc [ "operation", `String "my_name" ;
@@ -205,10 +215,10 @@ let () =
 		JsonProtocol.register_operation
 		  "sleep"
 		  begin fun message connection ->
-			let open Y.Util in
-			let timeout = message |> (member "timeout") |> to_float in
-			Lwt_unix.sleep timeout
-			>|= fun root_name -> `Assoc [ "result", `Null ]
+		  let open Y.Util in
+		  let timeout = message |> (member "timeout") |> to_float in
+		  Lwt_unix.sleep timeout
+		  >|= fun root_name -> `Assoc [ "result", `Null ]
 		  end
 	      let sleep timeout =
 		`Assoc [ "operation", `String "sleep" ;
@@ -218,14 +228,14 @@ let () =
 		JsonProtocol.register_operation
 		  "forward_native_timeout"
 		  begin fun message connection ->
-			let open Y.Util in
-			let peer_name = message |> (member "peer_name") |> to_string
-			and timeout = message |> (member "timeout") |> to_float
-			and forward = message |> (member "forward") in
-			NativeProtocol.Async.call
-			  ~settings: { Protocol.timeout = timeout }
-			  (Hashtbl.find connection.root.connections peer_name)
-			  (JsonProtocol.Sync.get_operation forward)
+		  let open Y.Util in
+		  let peer_name = message |> (member "peer_name") |> to_string
+		  and timeout = message |> (member "timeout") |> to_float
+		  and forward = message |> (member "forward") in
+		  NativeProtocol.Async.call
+		    ~settings: { Protocol.timeout = timeout }
+		    (Hashtbl.find connection.root.connections peer_name)
+		    (JsonProtocol.Sync.get_operation forward)
 		  end
 	      let forward_native_timeout peer_name timeout op =
 		`Assoc [ "operation", `String "forward_native_timeout" ;
@@ -415,7 +425,7 @@ let () =
 
 		 Builders.kill_peer safe_server timeout_server ;
 		 Builders.kill_peer safe_server2 timeout_server2 ;
-	       ])
+	    ])
 	    >|= (fun () -> settings := old_settings)
 	    >>= (fun () -> Lwt_unix.sleep 0.3)
 	    >>= (fun () -> run_tests [
@@ -423,7 +433,7 @@ let () =
 			       Builders.times test_server 2 7 ;
 			       Builders.times timeout_server 3 7 ;
 			       Builders.times timeout_server2 4 7 ;
-			     ])
+		])
 
 	  let run () =
 	    Lwt_io.printl "Runnning tests..."
@@ -441,4 +451,5 @@ let () =
       Lwt_main.run (X.run ())
     end
 
-let () = if not !has_run then failwith "Tests must be compiled without -noassert"
+let () = if not !has_run
+         then failwith "Tests must be compiled without -noassert"

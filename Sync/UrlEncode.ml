@@ -1,3 +1,5 @@
+module File = Utils_File
+
 let encode ?(plus = true) string =
   let l = String.length string in
   let b = Buffer.create (2 * l) in
@@ -49,7 +51,7 @@ let () =
 
 type target = { path : path ;
 		query : query }
- and path = string
+ and path = File.t
  and query = (string * string) list
 
 let path { path } = path
@@ -62,14 +64,14 @@ let target_parser =
   and value = !%"[^&]*" in
   let key_value = key %>. !@"=" %> value in
   let query = !@"?" %.> (key_value %% !@"&") in
-  path %> (query %? []) %$ fun (path, query) -> { path ; query }
+  path %> (query %? []) %$ fun (path, query) -> path, query
 
 let target_of_string ?plus q =
-  let { path ; query } =
+  let path, query =
     let open Parser.Infix in
     target_parser %< q
   in
-  { path = decode ?plus path ;
+  { path = decode ?plus path |> File.parse ;
     query = List.rev_map
 	      (fun (k, v) -> decode ?plus k, decode ?plus v)
 	      query
@@ -77,8 +79,8 @@ let target_of_string ?plus q =
 
 let string_of_target ?plus { path ; query } =
   let b = Buffer.create 10 in
+  path |> File.map (encode ?plus) |> File.to_string |> Buffer.add_string b;
   let add_string s = Buffer.add_string b (encode ?plus s) in
-  add_string path;
   begin match query with
 	| [] -> ()
 	| (k, v) :: t ->
@@ -96,21 +98,28 @@ let string_of_target ?plus { path ; query } =
   Buffer.contents b
 
 let () =
+  assert (Utils_Log.dlog "Testing UrlEncode");
   assert begin
+      assert (target_of_string "a/b/c+?def+=0"
+              = { path = File.parse "a/b/c " ; query = [ "def ", "0" ] });
+      assert (target_of_string "a/b/c%20?"
+              = { path = File.parse "a/b/c " ; query = [] });
+      assert (target_of_string "a/b/c%20"
+              = { path = File.parse "a/b/c " ; query = [] });
+      assert (target_of_string "?abc=20&"
+              = { path = File.parse "" ; query = [ "abc", "20" ] });
+      assert (target_of_string "?abc=20&abcd=21"
+              = { path = File.parse "" ; query = [ "abc", "20" ; "abcd", "21"] });
+      assert (string_of_target { path = File.parse "a/b/c " ; query = [ "def ", "0" ] }
+              = "a/b/c+?def+=0");
+      assert (string_of_target { path = File.parse "a/b/c " ;
+			         query = [ "def ", "0" ; "abc", "efg" ; "hij", "klm" ] }
+	      = "a/b/c+?def+=0&abc=efg&hij=klm");
+      assert (string_of_target { path = File.parse "a/b/c " ; query = [] }
+              = "a/b/c+");
+      let check ?plus x = x = (x |> target_of_string ?plus |> string_of_target ?plus) in
+      assert (check ~plus:true "abc+?def+=0&abc=efg&hij=klm");
+      assert (check ~plus:false "abc%20?def%20=0&abc%20=efg&hij=klm");
+      assert (check "abcdef");
       true
-      && target_of_string "abc+?def+=0" = { path = "abc " ; query = [ "def ", "0" ] }
-      && target_of_string "abc%20?" = { path = "abc " ; query = [] }
-      && target_of_string "abc%20" =  { path = "abc " ; query = [] }
-      && target_of_string "?abc=20&" =  { path = "" ; query = [ "abc", "20" ] }
-      && target_of_string "?abc=20&abcd=21" = { path = "" ; query = [ "abc", "20" ; "abcd", "21"] }
-      && string_of_target { path = "abc " ; query = [ "def ", "0" ] } = "abc+?def+=0"
-      && string_of_target { path = "abc " ;
-			    query = [ "def ", "0" ; "abc", "efg" ; "hij", "klm" ] }
-	 = "abc+?def+=0&abc=efg&hij=klm"
-      && string_of_target { path = "abc " ; query = [] } = "abc+"
-      && let check ?plus x = x = (x |> target_of_string ?plus |> string_of_target ?plus) in
-	 true
-	 && check ~plus:true "abc+?def+=0&abc=efg&hij=klm"
-	 && check ~plus:false "abc%20?def%20=0&abc%20=efg&hij=klm"
-	 && check "abcdef"
     end

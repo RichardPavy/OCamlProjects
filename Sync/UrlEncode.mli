@@ -4,7 +4,7 @@ val decode : ?plus:bool -> string -> string
 (** Target of an HTTP request. *)
 type target = { path : path ;
 		query : query }
- and path = string
+ and path = Utils_File.t
  and query = (string * string) list
 
 val path : target -> path

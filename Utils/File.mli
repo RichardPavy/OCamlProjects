@@ -36,3 +36,9 @@ val is_root : t -> bool
 
 (** Whether the file is in the root folder. *)
 val is_toplevel : t -> bool
+
+val chroot : int -> t -> t
+
+val equals : t -> t -> bool
+
+val map : (string -> string) -> t -> t

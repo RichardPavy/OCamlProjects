@@ -99,3 +99,8 @@ ocamlfind ocamlopt -I build/Utils -I build/OCamlMake -strict-formats -strict-seq
 ocamlfind ocamlopt -I build/Utils -I build/OCamlMake -noassert -linkpkg -package unix -package str -o build/OCamlMake/OCamlMake_Make.exe build/Utils/Utils_Iterable.cmx build/Container/Container_LinkedList.cmx build/Container/Container_LruMap.cmx build/Utils/Utils_Utils.cmx build/Utils/Utils_Cache.cmx build/Utils/Utils_File.cmx build/Utils/Utils_Foldable.cmx build/Utils/Utils_Log.cmx build/Utils/Utils_Predicate.cmx build/OCamlMake/OCamlMake_Property.cmx build/OCamlMake/OCamlMake_Flag.cmx build/Container/Container_HashSet.cmx build/OCamlMake/OCamlMake_Timestamp.cmx build/OCamlMake/OCamlMake_OCamlMake.cmx build/Container/Container_LinkedHashMap.cmx build/Container/Container_LinkedHashSet.cmx build/OCamlMake/OCamlMake_Private.cmx build/OCamlMake/OCamlMake_Process.cmx build/OCamlMake/OCamlMake_OCamlDep.cmx build/OCamlMake/OCamlMake_Canonical.cmx build/OCamlMake/OCamlMake_CommonRules.cmx build/OCamlMake/OCamlMake_OCamlRules.cmx build/OCamlMake/OCamlMake_Make.cmx
 cp build/OCamlMake/OCamlMake_Make.exe OCamlMake/Make.exe
 rm -rf build
+find . -type f -name '*.cmi' -exec rm {} +
+find . -type f -name '*.cmo' -exec rm {} +
+find . -type f -name '*.o' -exec rm {} +
+find . -type f -name '*.cmx' -exec rm {} +
+find . -type f -name '*.a' -exec rm {} +

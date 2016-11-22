@@ -1,6 +1,7 @@
 open Lwt.Infix
 open SyncTypes
 module ContentTypes = HttpHandler.ContentTypes
+module File = Utils_File
 
 let handler_name = "files"
 
@@ -11,14 +12,14 @@ let root =
   let specs = [ "files-root", Arg.Set_string root,
 		"<root> Root folder served by the HttpFileHandler" ]
   in
-  CommandLine.parse specs;
+  Sync_Utils_CommandLine.parse specs;
   !root
 
 let get_requested_filepath request =
   let open HttpProtocol in
   request.start_line.request_target
   |> UrlEncode.target_of_string |> UrlEncode.path (* Just get the path from the query. *)
-  |> Utils.split_path |> List.rev |> List.tl |> List.rev (* strip out the handler name. *)
+  |> File.parse |> File.chroot 1 |> File.to_string (* strip out the handler name. *)
 
 let get_file_extension filepath =
   match filepath with
@@ -27,11 +28,11 @@ let get_file_extension filepath =
      let rec aux i =
        if i = (-1) then
 	 ""
+       else if filename.[i] = '.' then
+         String.sub filename (i + 1) (String.length filename - i - 1)
+	 |> String.lowercase
        else
-	 if filename.[i] = '.'
-	 then String.sub filename (i + 1) (String.length filename - i - 1)
-	      |> String.lowercase
-	 else aux (i-1)
+         aux (i-1)
      in aux (String.length filename - 1)
 
 let is_forbidden_file = function
