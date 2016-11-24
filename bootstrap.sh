@@ -14,7 +14,9 @@ mkdir build/Utils
 cp Utils/Iterable.mli build/Utils/Utils_Iterable.mli
 ocamlfind ocamlc -I build/Utils  -c build/Utils/Utils_Iterable.mli
 ocamlfind ocamlc -I build/Utils -I build/Container  -c build/Container/Container_LinkedList.mli
-cp Utils/File.mli build/Utils/Utils_File.mli
+echo "module Foldable = Utils_Foldable module Iterable = Utils_Iterable" > build/Utils/Utils_File.mli ; cat Utils/File.mli >> build/Utils/Utils_File.mli
+cp Utils/Foldable.mli build/Utils/Utils_Foldable.mli
+ocamlfind ocamlc -I build/Utils  -c build/Utils/Utils_Foldable.mli
 ocamlfind ocamlc -I build/Utils  -c build/Utils/Utils_File.mli
 ocamlfind ocamlc -I build/Utils -I build/Container -I build/OCamlMake  -c build/OCamlMake/OCamlMake_Property.mli
 echo "module File = Utils_File module Iterable = Utils_Iterable" > build/Utils/Utils_Predicate.mli ; cat Utils/Predicate.mli >> build/Utils/Utils_Predicate.mli
@@ -37,11 +39,9 @@ echo "module Iterable = Utils_Iterable" > build/Utils/Utils_Utils.mli ; cat Util
 ocamlfind ocamlc -I build/Utils  -c build/Utils/Utils_Utils.mli
 ocamlfind ocamlopt -I build/Utils -strict-formats -strict-sequence -unsafe -noassert -c build/Utils/Utils_Utils.ml
 ocamlfind ocamlopt -I build/Utils -I build/Container -strict-formats -strict-sequence -unsafe -noassert -c build/Utils/Utils_Cache.ml
-echo "module Log = Utils_Log module Foldable = Utils_Foldable" > build/Utils/Utils_File.ml ; cat Utils/File.ml >> build/Utils/Utils_File.ml
+echo "module Iterable = Utils_Iterable module Log = Utils_Log module Foldable = Utils_Foldable" > build/Utils/Utils_File.ml ; cat Utils/File.ml >> build/Utils/Utils_File.ml
 cp Container/Slice.ml build/Container/Container_Slice.ml
 cp Container/Slice.mli build/Container/Container_Slice.mli
-cp Utils/Foldable.mli build/Utils/Utils_Foldable.mli
-ocamlfind ocamlc -I build/Utils  -c build/Utils/Utils_Foldable.mli
 ocamlfind ocamlc -I build/Utils -I build/Container  -c build/Container/Container_Slice.mli
 echo "module Log = Utils_Log" > build/Utils/Utils_Foldable.ml ; cat Utils/Foldable.ml >> build/Utils/Utils_Foldable.ml
 cp Utils/Log.ml build/Utils/Utils_Log.ml
