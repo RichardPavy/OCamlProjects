@@ -1,7 +1,9 @@
 open Lwt.Infix
 open SyncTypes
+
 module ContentTypes = HttpHandler.ContentTypes
 module File = Utils_File
+module Iterable = Utils_Iterable
 
 let handler_name = "files"
 
@@ -18,22 +20,9 @@ let root =
 let get_requested_filepath request =
   let open HttpProtocol in
   request.start_line.request_target
-  |> UrlEncode.target_of_string |> UrlEncode.path (* Just get the path from the query. *)
-  |> File.parse |> File.chroot 1 |> File.to_string (* strip out the handler name. *)
-
-let get_file_extension filepath =
-  match filepath with
-  | [] -> ""
-  | filename :: _ ->
-     let rec aux i =
-       if i = (-1) then
-	 ""
-       else if filename.[i] = '.' then
-         String.sub filename (i + 1) (String.length filename - i - 1)
-	 |> String.lowercase
-       else
-         aux (i-1)
-     in aux (String.length filename - 1)
+  |> UrlEncode.target_of_string
+  |> UrlEncode.path (* get the path from the query. *)
+  |> File.chroot 1 (* strip out the handler name. *)
 
 let is_forbidden_file = function
   | "." | ".." | ".DS_Store" -> true
@@ -55,25 +44,25 @@ let get_content_type =
 	      "txt", ContentTypes.plain_text ];
   fun file_extension ->
   HttpProtocol.Header.ContentType,
-  try Hashtbl.find h file_extension
+  try Hashtbl.find h (file_extension |> String.lowercase_ascii)
   with Not_found -> ContentTypes.plain_text
 
-let read_file filepath =
+let read_file file =
   Lwt_io.open_file ~flags: [Unix.O_RDONLY]
 		   ~mode: Lwt_io.Input
-		   (root ^ filepath)
+		   (root ^ File.to_string file)
   >|= fun channel ->
-      begin fun () ->
-	    Lwt.catch
-	      begin fun () ->
-		    Lwt_io.read ~count: 1000 channel
-		    >>= begin function
-			  | "" -> Lwt_io.close channel >>= fun () -> Lwt.return_none
-			  | chunk -> Lwt.return_some chunk
-			end
-	      end
-	      (fun e -> Lwt_io.close channel >>= fun () -> Lwt.fail e)
-      end |> Lwt_stream.from
+  begin fun () ->
+  Lwt.catch
+    begin fun () -> Lwt_io.read ~count: 1000 channel
+                    >>= (function
+	                 | "" -> Lwt_io.close channel >>= fun () -> Lwt.return_none
+	                 | chunk -> Lwt.return_some chunk)
+    end
+    begin fun e -> Lwt_io.close channel
+                   >>= fun () -> Lwt.fail e
+    end
+  end |> Lwt_stream.from
 
 let reply_not_found, reply_bad_request =
   let module P = HttpProtocol in
@@ -92,11 +81,10 @@ let reply_not_found, reply_bad_request =
   (fun _ -> aux P.ResponseCode.NotFound "Not found"),
   (fun _ -> aux P.ResponseCode.BadRequest "BadRequest")
 
-let reply_regular_file filepath =
-  let filepath_joined = Utils.join filepath in
-  read_file filepath_joined
+let reply_regular_file file =
+  read_file file
   >>= fun body ->
-  let content_type = filepath |> get_file_extension |> get_content_type in
+  let content_type = file |> File.extension |> get_content_type in
   let module P = HttpProtocol in
   { P.status_line =
       { P.response_http_version = P.HttpVersion.HTTP_1_1 ;
@@ -112,35 +100,43 @@ let reply_regular_file filepath =
 let file_template =
   let module H = HtmlParser in
   H.compile ~template: {|<li><a href=$expr:href>$expr:filename</a></li>|}
-	    ~expr: [ "href", (fun (_, path) -> "/" ^ handler_name
-					       ^ (path |> List.map UrlEncode.encode |> Utils.join)) ;
+	    ~expr: [ "href", begin fun (_, path) ->
+                             Printf.sprintf
+                               "/%s%s"
+                               handler_name
+			       (path |> File.map UrlEncode.encode |> File.to_string)
+                             end ;
 		     "filename", fst]
 	    ()
 
-let files_template (dirpath, files) b =
-  (match dirpath with
-   | [] -> ()
-   | _ :: t -> file_template ("..", t) b);
+let files_template (dir, files) b =
+  if File.is_root dir |> not then
+    file_template ("..", dir |> File.parent) b;
   List.iter
-    (fun file -> file_template (file, file :: dirpath) b)
+    (fun file -> file_template (file, File.child dir file) b)
     files
 
 let breadcrumb_template =
   let module H = HtmlParser in
   H.compile ~template: {| :: <a href=$expr:href>$expr:filename</a>|}
-	    ~expr: [ "href", (fun path -> "/" ^ handler_name ^ Utils.join path) ;
-		     "filename", List.hd]
+	    ~expr: [ "href", begin fun path ->
+                             Printf.sprintf
+                               "/%s%s"
+                               handler_name
+                               (path |> File.map UrlEncode.encode |> File.to_string)
+                             end ;
+		     "filename", File.filename]
 	    ()
 
-let breadcrumbs_template dirpath b =
-  let rec aux accu dirpath =
-    match dirpath with
-    | [] -> ["/"] :: accu
-    | _ :: q -> aux (dirpath :: accu) q
+let breadcrumbs_template dir b =
+  let rec aux accu dir =
+    if File.is_root dir
+    then (File.parse "/") :: accu
+    else aux (dir :: accu) (File.parent dir)
   in
   List.iter
-    (fun dirpath -> breadcrumb_template dirpath b)
-    (aux [] dirpath)
+    (fun leg -> breadcrumb_template leg b)
+    (aux [] dir)
 
 let directory_template =
   let module H = HtmlParser in
@@ -151,18 +147,18 @@ let directory_template =
 	 ~html: [ "files", (fun data -> data |> files_template) ;
 		  "breadcrumbs", (fun data -> data |> fst |> breadcrumbs_template) ]
 	 ~expr: [ "title", (fun data -> match fst data
-					with t :: _ -> t | [] -> "root") ]
+					with file when File.is_root file -> "root"
+                                           | file -> File.filename file) ]
 	 ()
 
-let reply_dir dirpath =
-  dirpath |> Utils.join
-  |> (fun dirpath -> Lwt_unix.files_of_directory (root ^ dirpath))
+let reply_dir dir =
+  Lwt_unix.files_of_directory (root ^ File.to_string dir)
   |> Lwt_stream.filter (fun file -> not (is_forbidden_file file))
   |> Lwt_stream.to_list
   >>= fun files ->
   let body =
     let b = Buffer.create 1024 in
-    directory_template (dirpath, files) b;
+    directory_template (dir, files) b;
     Lwt_stream.of_list [ Buffer.contents b ]
   in
   let module P = HttpProtocol in
@@ -178,23 +174,23 @@ let reply_dir dirpath =
   |> Lwt.return
 
 let file_handler request connection =
-  let filepath = get_requested_filepath request in
-  if List.exists is_forbidden_file filepath
+  let file = get_requested_filepath request in
+  if file |> File.to_iterable |> Iterable.any is_forbidden_file
   then reply_bad_request ()
   else
     Lwt.catch
-      begin fun () ->
-	    filepath |> Utils.join |> (fun filepath -> Lwt_unix.stat (root ^ filepath))
-	    >>= fun stat ->
-	    match stat.Unix.st_kind with
-	    | Unix.S_REG -> reply_regular_file filepath
-	    | Unix.S_DIR -> reply_dir filepath
-	    | _ -> reply_not_found ()
+      begin fun () -> Lwt_unix.stat (root ^ File.to_string file)
+                      >>= fun stat ->
+                      match stat.Unix.st_kind with
+                      | Unix.S_REG -> reply_regular_file file
+                      | Unix.S_DIR -> reply_dir file
+                      | _ -> reply_not_found ()
       end
       reply_not_found
 
 let () = HttpHandler.register_handler handler_name file_handler
 
+(* TODO
 let static_file_handler request connection =
   (let open Static.JQuery in if file <> file then raise Exit);
   Hashtbl.fold (fun k v t -> t >>= fun () -> Lwt_io.eprintlf "static file: %s" k)
@@ -220,16 +216,4 @@ let static_file_handler request connection =
   | _ -> reply_not_found ()
 
 let register () = HttpHandler.register_handler "static" static_file_handler
-
-(*** TESTS ***)
-
-let () =
-  assert ("blabla.txt" |> Utils.split_path |> get_file_extension = "txt");
-  assert ("BLABLA.TXT" |> Utils.split_path |> get_file_extension = "txt");
-  assert (".txt" |> Utils.split_path |> get_file_extension = "txt");
-  assert ("" |> Utils.split_path |> get_file_extension = "");
-  assert ("..." |> Utils.split_path |> get_file_extension = "");
-  assert ("filename" |> Utils.split_path |> get_file_extension = "");
-  assert ("/a/b/c" |> Utils.split_path |> get_file_extension = "");
-  assert ("/a.exe/b.exe/c" |> Utils.split_path |> get_file_extension = "");
-  assert ("/a.exe/b.exe/c.Doc" |> Utils.split_path |> get_file_extension = "doc")
+*)

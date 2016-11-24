@@ -1,5 +1,6 @@
 TODO:
 - Use Slice in list Parser
+- Implement static file handler (requires custom builder)
 
 DONE:
 - Perf comparison of using modules as virtual classes:

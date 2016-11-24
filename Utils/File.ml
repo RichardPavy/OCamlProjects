@@ -192,34 +192,43 @@ let map f path =
   and folder = Array.map f path.folder in
   { path with folder ; basename ; extension }
 
-let () =
-  assert begin
-      "/a/b/c" |> parse |> map String.uppercase_ascii
-      = ("/A/B/C" |> parse)
-    end
+let to_foldable path =
+  Foldable.concat
+    (Foldable.of_array path.folder)
+    (path |> filename |> Foldable.singleton)
+
+let to_iterable path =
+  Iterable.concat
+    (Iterable.of_array path.folder)
+    (path |> filename |> Iterable.singleton)
 
 let () =
+  assert ("/a/b/c" |> parse |> map String.uppercase_ascii
+          = ("/A/B/C" |> parse));
   assert (parse "/a/b/c/d" |> chroot 2
           = (parse "/c/d"));
   assert (parse "/a/b/c/d/e" |> chroot 2
-          <> (parse "/c/d"))
-
-let () = assert begin
-	     let ident path = to_string (parse path) in
-	     let check path = path = ident path in
-	     true
-	     && check "/"
-	     && check "/abc"
-	     && check "/abc."
-	     && check "/abc/def"
-	     && check "/abc/def."
-	     && check "/abc/def.exe"
-	     && check "/abc/.exe"
-	     && check ""
-	     && check "abc"
-	     && check "abc."
-	     && check "abc/def"
-	     && check "abc/def."
-	     && check "abc/def.exe"
-	     && check "abc/.exe"
-	   end
+          <> (parse "/c/d"));
+  assert begin
+      let ident path = to_string (parse path) in
+      let check path = path = ident path in
+      true
+      && check "/"
+      && check "/abc"
+      && check "/abc."
+      && check "/abc/def"
+      && check "/abc/def."
+      && check "/abc/def.exe"
+      && check "/abc/.exe"
+      && check ""
+      && check "abc"
+      && check "abc."
+      && check "abc/def"
+      && check "abc/def."
+      && check "abc/def.exe"
+      && check "abc/.exe"
+    end;
+  assert ("/a/b/c" |> parse |> to_foldable |> Foldable.fold (fun accu x -> x :: accu) ["begin"]
+          = [ "c" ; "b" ; "a" ; "begin" ]);
+  assert ("/a/b/c" |> parse |> to_iterable |> Iterable.to_list
+          = [ "a" ; "b" ; "c" ])

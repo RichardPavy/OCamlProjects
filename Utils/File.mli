@@ -40,3 +40,5 @@ val is_toplevel : t -> bool
 val chroot : int -> t -> t
 
 val map : (string -> string) -> t -> t
+val to_foldable : t -> string Foldable.t
+val to_iterable : t -> string Iterable.t

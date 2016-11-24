@@ -80,7 +80,9 @@ let dynamic_page_handler =
   let get_requested_handler_name request =
     let open HttpProtocol in
     request.start_line.request_target
-    |> UrlEncode.target_of_string |> UrlEncode.path (* Just get the path from the query. *)
+    |> UrlEncode.target_of_string
+    |> UrlEncode.path (* get the path from the query. *)
+    |> Utils_File.to_string
     |> (fun target -> Scanf.sscanf target requested_handler_name_format
 				   (fun target -> target))
   in
