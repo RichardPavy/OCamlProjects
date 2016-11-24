@@ -101,21 +101,23 @@ let () = assert (("file", Some "ml") = split_filename "file.ml");
 	 assert (("file", Some "") = split_filename "file.");
 	 assert (("file", None) = split_filename "file")
 
-type t = { folder : string Slice.t ;
+type t = { folder : string array ;
 	   basename : string ;
 	   extension : string option ;
 	   absolute : bool }
 
-let root = { folder = Slice.create ~capacity:0 () ;
+let root = { folder = [||] ;
              basename = "" ;
              extension = None ;
              absolute = false }
 
 let is_absolute { absolute } = absolute
 let is_root = function
-  | { folder ; basename = "" ; extension = None } when Slice.length folder = 0 -> true
+  | { folder = [||] ;
+      basename = "" ;
+      extension = None } -> true
   | _ -> false
-let is_toplevel path = Slice.length path.folder = 0
+let is_toplevel path = path.folder = [||]
 
 let parse path =
   let absolute = String.length path > 0 && path.[0] = '/' in
@@ -124,7 +126,7 @@ let parse path =
     { root with absolute }
   else
     let l = Slice.length path - 1 in
-    let folder = Slice.sub path 0 l
+    let folder = Slice.sub path 0 l |> Slice.to_array
     and filename = Slice.get path l in
     let basename, extension = split_filename filename in
     { folder ; basename ; extension ; absolute }
@@ -136,24 +138,24 @@ let filename path =
   | None -> path.basename
   | Some ext -> path.basename ^ "." ^ ext
 
-let parent ({ folder } as path) =
-  if Slice.length folder = 0 then
-    { root with absolute = path.absolute }
-  else
-    let l = Slice.length folder - 1 in
-    let folder = Slice.sub folder 0 l
-    and filename = Slice.get folder l in
-    let basename, extension = split_filename filename in
-    { folder ; basename ; extension ; absolute = path.absolute }
+let parent path =
+  match path with
+  | { folder = [||] } ->
+     { root with absolute = path.absolute }
+  | { folder } ->
+     let l = Array.length folder - 1 in
+     let folder = Array.sub folder 0 l
+     and filename = folder.(l) in
+     let basename, extension = split_filename filename in
+     { folder ; basename ; extension ; absolute = path.absolute }
 
 let child parent childname =
   let basename, extension = split_filename childname in
   { folder = (if is_root parent
 	      then root.folder
-	      else let folder = Slice.create ~capacity: (1 + Slice.length parent.folder) () in
-                   Slice.add_all folder (Slice.to_iterable parent.folder);
-                   Slice.add folder (filename parent);
-                   folder) ;
+	      else Array.append
+                     parent.folder
+                     [| filename parent |]) ;
     basename ;
     extension ;
     absolute = parent.absolute }
@@ -166,20 +168,14 @@ let to_string path =
     ~suffix: (match path.extension with None -> "" | Some ext -> "." ^ ext)
     ~absolute: path.absolute
     (Foldable.concat
-       (Slice.to_foldable path.folder)
+       (Foldable.of_array path.folder)
        (Foldable.singleton path.basename))
-
-let equals a b =
-  a.basename = b.basename
-  && a.extension = b.extension
-  && a.absolute = b.absolute
-  && Slice.equals a.folder b.folder
 
 let () =
   assert begin
       child ("/a/b/c" |> parse |> parent)
             "d"
-      |> equals ("/a/b/d" |> parse)
+      = ("/a/b/d" |> parse)
     end
 
 let basename path = path.basename
@@ -187,31 +183,26 @@ let full_base path = path |> strip_ext |> to_string
 let extension path = match path.extension with None -> "" | Some ext -> ext
 
 let chroot levels path =
-  { path with folder = Slice.sub path.folder
+  { path with folder = Array.sub path.folder
                                  levels
-                                 (Slice.length path.folder - levels) }
+                                 (Array.length path.folder - levels) }
 
 let map f path =
   let basename, extension = path |> filename |> f |> split_filename
-  and folder = Slice.create ~capacity: (Slice.length path.folder) () in
-  path.folder
-  |> Slice.to_iterable
-  |> Iterable.map f
-  |> Slice.add_all folder;
+  and folder = Array.map f path.folder in
   { path with folder ; basename ; extension }
 
 let () =
   assert begin
       "/a/b/c" |> parse |> map String.uppercase_ascii
-      |> equals ("/A/B/C" |> parse)
+      = ("/A/B/C" |> parse)
     end
 
 let () =
   assert (parse "/a/b/c/d" |> chroot 2
-          |> equals (parse "/c/d"));
+          = (parse "/c/d"));
   assert (parse "/a/b/c/d/e" |> chroot 2
-          |> equals (parse "/c/d")
-          |> not)
+          <> (parse "/c/d"))
 
 let () = assert begin
 	     let ident path = to_string (parse path) in

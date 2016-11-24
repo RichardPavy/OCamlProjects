@@ -39,6 +39,4 @@ val is_toplevel : t -> bool
 
 val chroot : int -> t -> t
 
-val equals : t -> t -> bool
-
 val map : (string -> string) -> t -> t
