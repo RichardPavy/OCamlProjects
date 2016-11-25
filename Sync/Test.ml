@@ -31,20 +31,14 @@ let run_test_server name port =
     Lwt_main.run
       begin
 	Lwt.async
-          begin fun () ->
-          Lwt_unix.sleep test_timeout
-	  >>= begin fun () -> Lwt_io.eprintlf
-			        "FAIL: On %s:%i, test timeout exceeded: %0.2fs"
-			        name port test_timeout
-              end
-	  >>= fun () -> Lwt_io.flush Lwt_io.stderr
-	  >>= fun () -> exit 0
+          begin fun () -> Lwt_unix.sleep test_timeout
+	                  >>= fun () -> exit 0
           end;
 	Lwt_io.printlf "Starting server %s" name
 	>>= begin fun () ->
             let { server } = Server.start ~name ~ip:test_ip ~port () in
-	    SyncUtils.async
-	      (Printf.sprintf "Killing server %s:%i" name port)
+	    Sync_Utils_AsyncUtils.async
+	      ~onerror: "Killing server %s:%i" name port
 	      (fun () -> server.onshutdown >>= (fun () -> exit 0));
 	    (* Wait forever. *)
 	    let waiter, _ = Lwt.wait () in waiter
@@ -104,26 +98,19 @@ let run_tests test_cases =
 
   let call connection test =
     Lwt.catch
-      begin fun () ->
-      let call_aux =
-	match !settings with
-	| None -> JsonProtocol.Sync.call connection
-	| Some settings -> JsonProtocol.Sync.call ~settings connection
-      in call_aux test.query
+      begin fun () -> let settings = !settings in
+                      JsonProtocol.Sync.call ?settings connection test.query
       end
-      begin fun exn ->
-      let open Y.Util in
-      ExnTranslator.to_json exn |> (member "exn_value") |> Lwt.return
+      begin fun exn -> let open Y.Util in
+                       ExnTranslator.to_json exn |> (member "exn_value") |> Lwt.return
       end
   in
 
   (* Run the test cases. *)
   let servers = M.bindings servers in
   Lwt_io.flush_all ()
-  >>= begin fun () ->
-      List.iter (fun (name, port) -> run_test_server name port) servers;
-      Lwt_unix.sleep 0.3
-      end
+  >|= (fun () -> List.iter (fun (name, port) -> run_test_server name port) servers)
+  >>= (fun () -> Lwt_unix.sleep 0.3)
   >>= (fun () -> open_connections servers)
   >>= begin fun connections_list ->
       Lwt.finalize
@@ -169,161 +156,159 @@ let run_tests test_cases =
 	end
       end
 
-module TestJsonOp =
-  struct
-    (** Creates a Json message to add a peer.
-        The peer port is [`Port of string] value that will be replaced with a
-        [`Int of int] value by the test case framework. *)
-    let add_peer ip peer_name =
-      `Assoc [ "operation", `String "add_peer" ;
-	       "ip", `String ip ;
-	       "port", (`Port peer_name |> Obj.magic) ]
+module TestJsonOp = struct
+  (** Creates a Json message to add a peer.
+      The peer port is [`Port of string] value that will be replaced with a
+      [`Int of int] value by the test case framework. *)
+  let add_peer ip peer_name =
+    `Assoc [ "operation", `String "add_peer" ;
+	     "ip", `String ip ;
+	     "port", (`Port peer_name |> Obj.magic) ]
 
-    let () =
-      JsonProtocol.register_operation
-	"peer_name"
-	begin fun message connection ->
-	let open Y.Util in
-	let peer_name = message |> (member "peer_name") |> to_string in
-	let peer = Hashtbl.find connection.root.connections peer_name in
-	Lwt.return (`Assoc [ "result", `String peer.peer_name ])
-	end
-    let peer_name peer_name =
-      `Assoc [ "operation", `String "peer_name" ;
-	       "peer_name", `String peer_name ]
+  let () =
+    JsonProtocol.register_operation
+      "peer_name"
+      begin fun message connection ->
+      let open Y.Util in
+      let peer_name = message |> (member "peer_name") |> to_string in
+      let peer = Hashtbl.find connection.root.connections peer_name in
+      `Assoc [ "result", `String peer.peer_name ] |> Lwt.return
+      end
+  let peer_name peer_name =
+    `Assoc [ "operation", `String "peer_name" ;
+	     "peer_name", `String peer_name ]
 
-    let () =
-      JsonProtocol.register_operation
-	"my_name"
-	begin fun message connection ->
-	let open Y.Util in
-	let peer_name = message |> (member "peer_name") |> to_string in
-	let root_to_peer = Hashtbl.find connection.root.connections peer_name in
-	NativeProtocol.Async.call root_to_peer
-				  (fun peer_to_root -> Lwt.return peer_to_root.peer_name)
-	>|= fun root_name -> `Assoc [ "result", `String root_name ]
-	end
-    let my_name peer_name =
-      `Assoc [ "operation", `String "my_name" ;
-	       "peer_name", `String peer_name ]
+  let () =
+    JsonProtocol.register_operation
+      "my_name"
+      begin fun message connection ->
+      let open Y.Util in
+      let peer_name = message |> (member "peer_name") |> to_string in
+      let root_to_peer = Hashtbl.find connection.root.connections peer_name in
+      NativeProtocol.Async.call root_to_peer
+				(fun peer_to_root -> Lwt.return peer_to_root.peer_name)
+      >|= fun root_name -> `Assoc [ "result", `String root_name ]
+      end
+  let my_name peer_name =
+    `Assoc [ "operation", `String "my_name" ;
+	     "peer_name", `String peer_name ]
 
-    let () =
-      JsonProtocol.register_operation
-	"sleep"
-	begin fun message connection ->
-	let open Y.Util in
-	let timeout = message |> (member "timeout") |> to_float in
-	Lwt_unix.sleep timeout
-	>|= fun root_name -> `Assoc [ "result", `Null ]
-	end
-    let sleep timeout =
-      `Assoc [ "operation", `String "sleep" ;
-	       "timeout", `Float timeout ]
+  let () =
+    JsonProtocol.register_operation
+      "sleep"
+      begin fun message connection ->
+      let open Y.Util in
+      let timeout = message |> (member "timeout") |> to_float in
+      Lwt_unix.sleep timeout
+      >|= fun root_name -> `Assoc [ "result", `Null ]
+      end
+  let sleep timeout =
+    `Assoc [ "operation", `String "sleep" ;
+	     "timeout", `Float timeout ]
 
-    let () =
-      JsonProtocol.register_operation
-	"forward_native_timeout"
-	begin fun message connection ->
-	let open Y.Util in
-	let peer_name = message |> (member "peer_name") |> to_string
-	and timeout = message |> (member "timeout") |> to_float
-	and forward = message |> (member "forward") in
-	NativeProtocol.Async.call
-	  ~settings: { Protocol.timeout = timeout }
-	  (Hashtbl.find connection.root.connections peer_name)
-	  (JsonProtocol.Sync.get_operation forward)
-	end
-    let forward_native_timeout peer_name timeout op =
-      `Assoc [ "operation", `String "forward_native_timeout" ;
-	       "peer_name", `String peer_name ;
-	       "timeout", `Float timeout ;
-	       "forward", op ]
-  end
+  let () =
+    JsonProtocol.register_operation
+      "forward_native_timeout"
+      begin fun message connection ->
+      let open Y.Util in
+      let peer_name = message |> (member "peer_name") |> to_string
+      and timeout = message |> (member "timeout") |> to_float
+      and forward = message |> (member "forward") in
+      NativeProtocol.Async.call
+	~settings: { Protocol.timeout = timeout }
+	(Hashtbl.find connection.root.connections peer_name)
+	(JsonProtocol.Sync.get_operation forward)
+      end
+  let forward_native_timeout peer_name timeout op =
+    `Assoc [ "operation", `String "forward_native_timeout" ;
+	     "peer_name", `String peer_name ;
+	     "timeout", `Float timeout ;
+	     "forward", op ]
+end
 
-module Builders =
-  struct
-    let times connection a b =
-      { connection ;
-	query = JsonOp.times a b ;
-	response = `Assoc [ "result", `Int (a * b) ] }
+module Builders = struct
+  let times connection a b =
+    { connection ;
+      query = JsonOp.times a b ;
+      response = `Assoc [ "result", `Int (a * b) ] }
 
-    let divide connection a b =
-      { connection ;
-	query = JsonOp.divide a b ;
-	response = `Assoc [ "result", `Int (a / b) ] }
+  let divide connection a b =
+    { connection ;
+      query = JsonOp.divide a b ;
+      response = `Assoc [ "result", `Int (a / b) ] }
 
-    let root_name connection =
-      { connection ;
-	query = JsonOp.root_name ;
-	response = `Assoc [ "result", `String connection ] }
+  let root_name connection =
+    { connection ;
+      query = JsonOp.root_name ;
+      response = `Assoc [ "result", `String connection ] }
 
-    (** Creates a test_case where the peer's port is replaced with a numerical
+  (** Creates a test_case where the peer's port is replaced with a numerical
                   value by the test case framework. *)
-    let add_peer ?(expected = "Both") connection peer =
-      { connection ;
-	query = TestJsonOp.add_peer test_ip peer ;
-	response = `Assoc [ "result", `String expected ] }
+  let add_peer ?(expected = "Both") connection peer =
+    { connection ;
+      query = TestJsonOp.add_peer test_ip peer ;
+      response = `Assoc [ "result", `String expected ] }
 
-    let peers connection peers =
-      { connection ;
-	query = JsonOp.peers ;
-	response = `Assoc [ "result", `List (List.map (fun peer -> `String peer) peers) ] }
+  let peers connection peers =
+    { connection ;
+      query = JsonOp.peers ;
+      response = `Assoc [ "result", `List (List.map (fun peer -> `String peer) peers) ] }
 
-    let remove_peer ?(expected = true) connection removed_peer =
-      { connection ;
-	query = JsonOp.remove_peer removed_peer ;
-	response = `Assoc [ "result", `Bool expected ] }
+  let remove_peer ?(expected = true) connection removed_peer =
+    { connection ;
+      query = JsonOp.remove_peer removed_peer ;
+      response = `Assoc [ "result", `Bool expected ] }
 
-    let kill_peer connection peer =
-      { connection ;
-	query = JsonOp.kill_peer peer ;
-	response = `Assoc [ "result", `Bool true ] }
+  let kill_peer connection peer =
+    { connection ;
+      query = JsonOp.kill_peer peer ;
+      response = `Assoc [ "result", `Bool true ] }
 
-    let peer_name connection peer =
-      { connection ;
-	query = TestJsonOp.peer_name peer ;
-	response = `Assoc [ "result", `String peer ] }
+  let peer_name connection peer =
+    { connection ;
+      query = TestJsonOp.peer_name peer ;
+      response = `Assoc [ "result", `String peer ] }
 
-    let my_name connection peer =
-      { connection ;
-	query = TestJsonOp.my_name peer ;
-	response = `Assoc [ "result", `String connection ] }
+  let my_name connection peer =
+    { connection ;
+      query = TestJsonOp.my_name peer ;
+      response = `Assoc [ "result", `String connection ] }
 
-    let forward connection test =
-      { connection ;
-	query = JsonOp.forward test.connection test.query ;
-	response = test.response }
+  let forward connection test =
+    { connection ;
+      query = JsonOp.forward test.connection test.query ;
+      response = test.response }
 
-    let forward_native connection test =
-      { connection ;
-	query = JsonOp.forward_native test.connection test.query ;
-	response = test.response }
+  let forward_native connection test =
+    { connection ;
+      query = JsonOp.forward_native test.connection test.query ;
+      response = test.response }
 
-    let sleep connection duration =
-      { connection ;
-	query = TestJsonOp.sleep duration ;
-	response = `Assoc [ "result", `Null ] }
+  let sleep connection duration =
+    { connection ;
+      query = TestJsonOp.sleep duration ;
+      response = `Assoc [ "result", `Null ] }
 
-    let timeout connection duration =
-      { connection ;
-	query = TestJsonOp.sleep duration ;
-	response = `String "Timeout error" }
+  let timeout connection duration =
+    { connection ;
+      query = TestJsonOp.sleep duration ;
+      response = `String "Timeout error" }
 
-    let forward_native_timeout connection timeout test =
-      { connection ;
-	query = TestJsonOp.forward_native_timeout
-		  test.connection
-		  timeout
-		  test.query ;
-	response = test.response }
+  let forward_native_timeout connection timeout test =
+    { connection ;
+      query = TestJsonOp.forward_native_timeout
+		test.connection
+		timeout
+		test.query ;
+      response = test.response }
 
-    let op_not_found connection op =
-      { connection ;
-	query = `Assoc [ "operation", `String op ] ;
-	response = `Assoc [ "kind", `String "System" ;
-			    "value", `String ("Failure(\"Operation not found: <" ^ op ^ ">\")") ]
-      }
-  end
+  let op_not_found connection op =
+    { connection ;
+      query = `Assoc [ "operation", `String op ] ;
+      response = `Assoc [ "kind", `String "System" ;
+			  "value", `String ("Failure(\"Operation not found: <" ^ op ^ ">\")") ]
+    }
+end
 
 let basic_test_cases =
   [

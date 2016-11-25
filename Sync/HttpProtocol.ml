@@ -165,10 +165,11 @@ module Header = struct
 			 Unix.tm_yday = -1 ;
 			 Unix.tm_isdst = false })
 	|> to_gmt_timestamp
-      with Scanf.Scan_failure _
-	 | Failure _
-	   | End_of_file
-	   | Invalid_argument _ -> parse_error date
+      with
+      | Scanf.Scan_failure _
+      | Failure _
+      | End_of_file
+      | Invalid_argument _ -> parse_error date
 
     in date, parse_date
 

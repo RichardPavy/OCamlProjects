@@ -14,7 +14,7 @@ let add_peer =
 	connection.peer_name <- peer_name;
 	Hashtbl.add root.connections peer_name connection;
 	AsyncUtils.async
-	  "connection_closed"
+	  ~onerror: "connection_closed"
 	  (fun () -> connection.onclose
 		     >|= fun () -> Hashtbl.remove root.connections peer_name);
 	true

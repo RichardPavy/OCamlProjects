@@ -35,7 +35,7 @@ let serve connection =
 	| exn -> Lwt.fail exn
       end
   in
-  Sync_Utils_AsyncUtils.async "Serve connection" run
+  Sync_Utils_AsyncUtils.async ~onerror: "Serve connection" run
 
 let start ?(name = name) ?(ip = ip) ?(port = port) () =
   Rpc.establish_server

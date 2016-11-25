@@ -1,6 +1,8 @@
+let () = assert (Utils_Log.dlog "Testing AsyncUtils")
+
 open Lwt.Infix
 
-let async format =
+let async ~onerror: format =
   Printf.ksprintf
     begin fun name callback ->
     Lwt.async
@@ -17,7 +19,7 @@ let async format =
 
 let () =
   assert begin
-      async "AsyncUtils.ml test: %s" "string" (fun () -> Lwt.fail Exit);
+      async ~onerror: "AsyncUtils.ml test: %s" "string" (fun () -> Lwt.fail Exit);
       true
     end
 

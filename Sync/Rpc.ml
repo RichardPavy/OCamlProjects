@@ -117,12 +117,12 @@ let establish_server ?buffer_size ?(backlog = 5) ~ip ~port root callback =
 	     | _ -> Lwt.return_unit
 	     end
        in
-       AsyncUtils.async "Server %s:%i shutdown." ip port
+       AsyncUtils.async ~onerror: "Server %s:%i shutdown." ip port
 		        close_server_socket;
        Lwt_io.eprintlf "Server %s:%i is down." ip port
        >|= fun () -> Lwt.wakeup onshutdown_wakener ()
   in
-  AsyncUtils.async "server loop" loop;
+  AsyncUtils.async ~onerror: "Server loop" loop;
   root
 
 let open_connection ?buffer_size ~ip ~port root =

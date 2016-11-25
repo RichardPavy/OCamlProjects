@@ -1,15 +1,21 @@
+let () = assert (Utils_Log.dlog "Testing HtmlEntities")
+
 let substr_scanning_channel string start count =
   let cur = ref start in
   let endpos = min (start + count) (String.length string) in
   Scanf.Scanning.from_function
     begin fun () ->
-	  if !cur >= endpos then
-	    raise End_of_file
-	  else
-	    let c = string.[!cur] in
-	    incr cur; c
+    if !cur >= endpos then
+      raise End_of_file
+    else
+      let c = string.[!cur] in
+      incr cur; c
     end
-let () = assert ("cde" = Scanf.bscanf (substr_scanning_channel "abcdefghijk" 2 3) "%s" (fun x->x))
+
+let () = assert (Scanf.bscanf (substr_scanning_channel "abcdefghijk" 2 3)
+                              "%s"
+                              (fun x -> x)
+                 = "cde")
 
 let encode string =
   let l = String.length string in
@@ -24,6 +30,7 @@ let encode string =
     | c -> Buffer.add_char b c
   done;
   Buffer.contents b
+
 let () =
   assert (encode "<>&'\"é" = "&lt;&gt;&amp;&apos;&quot;é");
   assert (encode "&amp;" = "&amp;amp;")
@@ -304,40 +311,56 @@ let entity_to_utf8 = function
 let decode html =
   let l = String.length html in
   let b = Buffer.create l in
+
   let rec parse_normal i =
-    begin match html.[i] with
-	  | '&' -> parse_special (i+1)
-	  | c -> Buffer.add_char b c; parse_normal (i+1)
-	  | exception (Invalid_argument _) -> ()
-    end
+    if i < l then
+      match html.[i] with
+      | '&' -> parse_special (i+1)
+      | c -> Buffer.add_char b c; parse_normal (i+1)
+
   and parse_special i =
-    begin match String.index_from html i ';' with
-	  | p -> parse_special_character i p
-	  | exception Not_found -> Buffer.add_char b '&'; parse_normal i
-    end
+    if i < l then
+      match String.index_from html i ';' with
+      | p -> parse_special_character i p
+      | exception Not_found -> Buffer.add_char b '&'; parse_normal i
+    else
+      (Buffer.add_char b '&'; parse_normal i)
+
   and parse_special_character i end_of_special =
     match html.[i] with
     | '#' -> parse_special_number (i+1) end_of_special
     | _ ->
        let entity = String.sub html i (end_of_special - i) in
-       begin match entity_to_utf8 entity with
-	     | c -> Buffer.add_string b c; parse_normal (end_of_special + 1)
-	     | exception Not_found -> Buffer.add_char b '&'; parse_normal i
-       end
+       match entity_to_utf8 entity with
+       | c -> Buffer.add_string b c; parse_normal (end_of_special + 1)
+       | exception Not_found -> Buffer.add_char b '&'; parse_normal i
+
   and parse_special_number i end_of_special =
-    try
-      let utf8_character =
-	try match html.[i] with
-	    | 'x' | 'X' -> Scanf.bscanf (substr_scanning_channel html (i+1) 10) "%x;" codepoint_to_string
-	    | _ -> Scanf.bscanf (substr_scanning_channel html i 10) "%u;" codepoint_to_string
-	with _ -> raise Exit
-      in
-      Buffer.add_string b utf8_character;
-      parse_normal (end_of_special + 1)
-    with Exit -> Buffer.add_string b "&#"; parse_normal i
+    let utf8_character () =
+      try
+        match html.[i] with
+	| 'x' | 'X' ->
+           Scanf.bscanf (substr_scanning_channel html (i+1) 10)
+                        "%x;"
+                        codepoint_to_string
+	| _ ->
+           Scanf.bscanf (substr_scanning_channel html i 10)
+                        "%u;"
+                        codepoint_to_string
+      with _ -> raise Exit
+    in
+    match utf8_character () with
+    | utf8_character ->
+       Buffer.add_string b utf8_character;
+       parse_normal (end_of_special + 1)
+    | exception Exit ->
+       Buffer.add_string b "&#";
+       parse_normal i
+
   in
   parse_normal 0;
   Buffer.contents b
-let _ =
+
+let () =
   assert (decode "abcd &amp; +-&times;&#247; &Omega;" = "abcd & +-×÷ Ω");
   assert (decode "&amp; &hkl&amp; &#abc; &amp" = "& &hkl& &#abc; &amp")

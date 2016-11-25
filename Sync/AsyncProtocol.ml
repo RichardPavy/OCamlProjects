@@ -64,7 +64,7 @@ module Make =
 
     let respond connection =
       AsyncUtils.async
-	"AsyncProtocol.respond" begin
+	~onerror: "AsyncProtocol.respond" begin
 	  fun () ->
 	  read_request connection.input
 
