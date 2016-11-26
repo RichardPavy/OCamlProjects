@@ -1,4 +1,6 @@
 open Utils
+open OCamlMake_Common
+
 module HashSet = Container_HashSet
 
 type Flag.kind += OCamlDep

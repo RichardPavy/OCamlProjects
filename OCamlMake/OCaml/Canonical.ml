@@ -1,7 +1,9 @@
 open Utils
-open Container
+open OCamlMake_Common
 
 module It = Iterable
+module HashSet = Container_HashSet
+module OM = OCamlMake_OCamlMake
 
 (**
  * Returns the canonical module name.
@@ -31,25 +33,6 @@ let module_to_canonical_ml_file folder module_name =
   |> File.child folder
   |> File.with_ext "ml"
 
-let () =
-  let open Private in
-  assert (canonical_module_name
-            (File.parsef "%s/Some/Package" private_folder)
-            "ModuleX"
-          = "Some_Package_ModuleX");
-  assert (canonical_module_name
-            (File.parse private_folder)
-            "ModuleX"
-          = "ModuleX");
-  assert (module_to_canonical_ml_file
-            (File.parsef "%s/Some/Package" private_folder)
-            "ModuleX"
-          = File.parsef "%s/Some/Package/Some_Package_ModuleX.ml" private_folder);
-  assert (module_to_canonical_ml_file
-            (File.parse private_folder)
-            "ModuleX"
-          = File.parsef "%s/ModuleX.ml" private_folder)
-
 (**
  * Returns the canonical source file (a *.ml file) from a canonical module name.
  * Example: Some_Package_ModuleX -> "build/Some/Package/Some_Package_ModuleX.ml" *)
@@ -77,13 +60,6 @@ let canonical_module_to_dir canonical_module_name =
               |> File.parse
               |> Private.to_private
 
-let () =
-  let open Private in
-  assert (canonical_module_to_canonical_ml_file "ModuleX"
-          = File.parsef "%s/ModuleX.ml" private_folder);
-  assert (canonical_module_to_canonical_ml_file "Some_Package_ModuleX"
-          = File.parsef "%s/Some/Package/Some_Package_ModuleX.ml" private_folder)
-
 type module_naming_convention = Relative | Absolute | Package | Builtin
 
 (** Returns:
@@ -91,17 +67,17 @@ type module_naming_convention = Relative | Absolute | Package | Builtin
  * b. the name of the source file for the module. *)
 let module_to_convention_and_dependency folder module_name =
   let canonical_ml_file = module_to_canonical_ml_file folder module_name in
-  if OCamlMake.has_rule canonical_ml_file then
+  if OM.has_rule canonical_ml_file then
     (* Module from the same package. *)
     Relative, canonical_ml_file
   else
     let canonical_ml_file = canonical_module_to_canonical_ml_file module_name in
-    if OCamlMake.has_rule canonical_ml_file then
+    if OM.has_rule canonical_ml_file then
       (* Canonical package name used: Some_Package_ModuleX. *)
       Absolute, canonical_ml_file
     else
       let canonical_dir = canonical_module_to_dir module_name in
-      if OCamlMake.has_rule canonical_dir then
+      if OM.has_rule canonical_dir then
         Package, canonical_dir
       else
         Builtin, File.root
@@ -133,7 +109,7 @@ let private_ml_file_rule target =
   let source = target |> canonical_file_to_file in
   let mli_file = source |> File.with_ext "mli" in
   let has_mli_file () = File.extension source = "ml"
-                        && OCamlMake.has_rule mli_file in
+                        && OM.has_rule mli_file in
   let targets = It.singleton target
   and sources =
     It.concat
@@ -155,7 +131,7 @@ let private_ml_file_rule target =
          then "= struct"
          else ": sig")
         (module_source
-         |> OCamlMake.get_targets
+         |> OM.get_targets
          |> Iterable.filter (Predicate.extension "cmo")
          |> Iterable.map File.basename
          |> Iterable.map
@@ -176,16 +152,21 @@ let private_ml_file_rule target =
       end
       |> It.map begin fun module_name ->
                 let module_naming_convention, module_source =
-                  module_to_convention_and_dependency (File.parent target) module_name
+                  module_to_convention_and_dependency
+                    (File.parent target)
+                    module_name
                 in
                 module_name, module_naming_convention, module_source
                 end
-      |> It.map begin fun (module_name, module_naming_convention, module_source) ->
-                match module_naming_convention with
-                | Absolute | Builtin -> None
-                | Relative -> Some (print_relative_module_alias module_name module_source)
-                | Package -> Some (print_package_alias module_name module_source)
-                end
+      |> It.map
+           begin fun (module_name, module_naming_convention, module_source) ->
+           match module_naming_convention with
+           | Absolute | Builtin -> None
+           | Relative -> Some (print_relative_module_alias
+                                 module_name module_source)
+           | Package -> Some (print_package_alias
+                                module_name module_source)
+           end
       |> It.filter (fun x -> x <> None)
       |> It.map (fun x -> match x with Some y -> y | None -> failwith "Impossible")
       |> Utils.join " "
@@ -203,7 +184,7 @@ let private_ml_file_rule target =
                  (File.to_string target)
     end |> ignore
   in
-  let open OCamlMake in
+  let open OM in
   { targets ; sources ; command }
 
 let public_ml_file_rule target =
@@ -221,5 +202,50 @@ let public_ml_file_rule target =
 		     (File.to_string target)
 		   |> ignore
   in
-  let open OCamlMake in
+  let open OM in
   { targets ; sources ; command }
+
+let () =
+  assert (Log.dlog "Testing Canonical");
+  let open Private in
+  assert
+    ([ "canonical_module_name sub-package",
+       (fun () ->
+         canonical_module_name
+           (File.parsef "%s/Some/Package" private_folder)
+           "ModuleX"
+         = "Some_Package_ModuleX") ;
+
+       "canonical_module_name root",
+       (fun () ->
+         canonical_module_name
+           (File.parse private_folder)
+           "ModuleX"
+         = "ModuleX") ;
+
+       "module_to_canonical_ml_file sub-package",
+       (fun () ->
+         module_to_canonical_ml_file
+           (File.parsef "%s/Some/Package" private_folder)
+           "ModuleX"
+         = File.parsef "%s/Some/Package/Some_Package_ModuleX.ml"
+                       private_folder) ;
+
+       "module_to_canonical_ml_file root",
+       (fun () ->
+         module_to_canonical_ml_file
+           (File.parse private_folder)
+           "ModuleX"
+         = File.parsef "%s/ModuleX.ml" private_folder) ;
+
+       "canonical_module_to_canonical_ml_file sub-package",
+       (fun () ->
+         canonical_module_to_canonical_ml_file "Some_Package_ModuleX"
+         = File.parsef "%s/Some/Package/Some_Package_ModuleX.ml"
+                       private_folder) ;
+
+       "canonical_module_to_canonical_ml_file root",
+       (fun () ->
+         canonical_module_to_canonical_ml_file "ModuleX"
+         = File.parsef "%s/ModuleX.ml" private_folder) ;
+     ] |> Asserts.test)

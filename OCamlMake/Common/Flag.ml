@@ -25,4 +25,4 @@ let add_file ~kind ~file ~generator =
 
 let get kind ?(sep = " ") target =
   (flags kind).Property.get target
-  |> Utils_Utils.join sep
+  |> Utils.join sep

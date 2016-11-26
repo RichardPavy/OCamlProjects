@@ -1,8 +1,3 @@
-open Utils
-open Container
-
-(* #load "OCamlBuild.cma";; #directory "build";; *)
-
 (**
  * How dependencies work across folders.
  *
@@ -56,139 +51,16 @@ open Container
  *   >>>
  *)
 
+open Utils
+open Container
+open Common
+
 module It = Iterable
-
-(** Verifies that a file has the right extension. *)
-let dcheck_extension target extension =
-  Utils.dcheck (target |> File.extension = extension)
-	       "Unexpected *.%s target file: %s"
-	       extension (File.to_string target)
-
-let { Cache.fn = list_folder_content ;
-      Cache.clear = clear_folder_content_cache } =
-  Cache.make
-    ~max_size: 10
-    begin fun folder ->
-    match Timestamp.kind folder with
-    | Timestamp.Null when not (File.is_root folder) -> []
-    | Timestamp.Null | Timestamp.Folder ->
-       folder
-       |> File.to_string
-       |> Process.run_command "ls %s"
-    | _ -> Utils.fail "Not a folder: %s" (File.to_string folder) |> raise
-    end
-
-(**
- * Runs ocamldep to figure out the dependencies of a file.
- * Does not include the file itself.
- * - source: an OCaml source file (either *.ml or *.mli)
- * - extension: the extension with which dependencies are returned.
- *   Can be any extension. *)
-let get_dependencies extension source =
-  lazy begin
-      source
-      |> OCamlDep.ocamldep
-      |> Iterable.of_list
-      |> It.map (Canonical.module_to_dependency (File.parent source))
-      |> It.filter ((<>) File.root)
-      |> It.map (File.with_ext extension)
-    end |> It.of_lazy
-
-(**
- * Returns all the dependencies of a source file (either *.ml or *.mli). *)
-let get_transitive_dependencies extension source =
-  let module LHS = LinkedHashSet in
-  let deps = LHS.create () in
-  let source_ext = File.extension source in
-  let rec process dep =
-    if LHS.mem deps dep |> not
-    then begin
-        dep
-        |> File.with_ext source_ext
-        |> get_dependencies extension
-        |> It.iter process;
-        LHS.add deps dep
-      end
-  in
-  process (source |> File.with_ext extension);
-  deps |> LHS.to_iterable
-
-(** Returns all the modules that a source depends on, including system modules. *)
-let get_all_modules source =
-  let all_modules = HashSet.create () in
-  source
-  |> get_transitive_dependencies (File.extension source)
-  |> It.map OCamlDep.modules
-  |> It.map It.of_list
-  |> It.flatten
-  |> It.iter begin fun m -> if HashSet.mem all_modules m |> not
-                            then HashSet.add all_modules m
-             end;
-  all_modules
-
-(** Include the source file's directory if necessary. *)
-let flag_include_dirs sources =
-  let flags = HashSet.create () in
-  sources
-  |> Iterable.iter begin fun source_file ->
-                   if not (File.is_toplevel source_file)
-                   then let flag = "-I " ^ (source_file
-                                            |> File.parent
-                                            |> File.to_string)
-                        in
-                        if not (HashSet.mem flags flag)
-                        then HashSet.add flags flag
-                   end;
-  HashSet.to_iterable flags |> Utils.join " "
-
-let () =
-  assert ("" = (File.parse "File.ml" |> Iterable.singleton |> flag_include_dirs));
-  assert ("" = (File.parse "/File.ml" |> Iterable.singleton |> flag_include_dirs));
-  assert ("-I package/folder" = (File.parse "package/folder/File.ml"
-                                 |> Iterable.singleton |> flag_include_dirs))
+module Deps = Dependency.Lib
 
 type Flag.kind += Interface
 type Flag.kind += Object
 type Flag.kind += Executable
-
-(**
- * Returns a flag to include all required packages when linking an executable.
- * - kind: flag kind namespace.
- * - source: source file to determine all transitive dependencies.
- * - target: file to which the flag should be attached to. *)
-let add_package_flag =
-  let module_to_package =
-    [ "Lwt", "lwt" ;
-      "Lwt", "lwt.unix" ;
-      "Unix", "unix" ;
-      "Str", "str" ;
-      "Yojson", "yojson" ] |> It.of_list
-  in fun ~kind ~source ~target ->
-     Log.block
-       "add_package_flag <%s -> %s>" (File.to_string source) (File.to_string target)
-       begin fun () ->
-       let modules = get_all_modules source in
-       match module_to_package
-             |> It.filter (fun (m, _) -> HashSet.mem modules m)
-             |> It.map snd
-             |> It.to_list
-       with
-       | [] -> None
-       | packages ->
-          let generator =
-            let packages_flags =
-              packages
-              |> It.of_list
-              |> It.map (fun package -> "-package " ^ package)
-            in
-            if kind = Executable
-            then fun _ -> It.concat (It.singleton "-linkpkg") packages_flags
-            else fun _ -> packages_flags
-          in
-          Some (Flag.add_file ~kind
-                              ~file: target
-                              ~generator)
-       end
 
 (**
  * A rule to build a *.cmi file
@@ -196,7 +68,7 @@ let add_package_flag =
  *            all the *.cmi files of dependencies
  * - Target: the *.cmi file *)
 let cmi_rule cmi_file =
-  assert (dcheck_extension cmi_file "cmi");
+  assert (Asserts.extension cmi_file "cmi");
   let mli_file = cmi_file |> File.with_ext "mli" in
   let targets = It.singleton cmi_file
   and sources =
@@ -389,17 +261,56 @@ let build_folder_rule_generator ~folder =
               |> It.singleton in
   OCamlMake.rule_generator_result ~rules ()
 
+let ocamldoc_folder_name = "doc"
+
+let ocamldoc_rule_generator ~folder =
+  let rules =
+    if folder |> File.filename <> ocamldoc_folder_name then
+      CommonRules.folder_rule (File.child folder ocamldoc_folder_name)
+      |> It.singleton
+    else
+      let folder_string = File.to_string folder in
+      let targets = File.child folder "index.html" |> It.singleton
+      and sources = OCamlMake.get_targets (File.parent folder)
+                    |> It.filter
+                         (let open Predicate in
+                          let open Predicate.Infix in
+                          extension "ml" ||$ extension "mli")
+                    |> It.to_array |> It.of_array
+      in
+      let command () =
+        Process.run_command "rm -rf %s" folder_string |> ignore;
+        Process.run_command "mkdir %s" folder_string |> ignore;
+        Process.run_command "ocamlfind ocamldoc -html -keep-code -all-params -colorize-code -d %s %s"
+                            folder_string
+                            (sources
+                             |> It.map File.to_string
+                             |> Utils.join " ")
+        |> ignore;
+      in
+      let open OCamlMake in
+      { targets ; sources ; command }
+      |> It.singleton
+  in
+  OCamlMake.rule_generator_result ~rules ()
+
 let ocaml_rules_generator ~folder =
   Log.block
     "OCaml rules generator for <%s>" (File.to_string folder)
     begin fun () ->
     let other_generators =
-      if Private.is_private folder then
-        It.singleton ocaml_private_rules_generator
-      else if File.is_root folder then
-        [ ocaml_public_rules_generator ;
-          build_folder_rule_generator ] |> It.of_list
-      else It.singleton ocaml_public_rules_generator
+      begin
+        if Private.is_private folder then
+          [ ocaml_private_rules_generator ;
+            ocamldoc_rule_generator ]
+        else if File.is_root folder then
+          [ ocaml_public_rules_generator ;
+            build_folder_rule_generator ;
+            ocamldoc_rule_generator ]
+        else
+          [ ocaml_public_rules_generator ;
+            ocamldoc_rule_generator ]
+      end |> It.of_list
     in
     OCamlMake.rule_generator_result ~other_generators ()
     end

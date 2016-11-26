@@ -1,4 +1,6 @@
 TODO:
+- Better split libraries used in OCamlRules
+- Log levels, so that we can filter out unimportant logs
 - Use Slice in list Parser
 - Implement static file handler (requires custom builder)
 

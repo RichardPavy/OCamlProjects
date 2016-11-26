@@ -1,3 +1,4 @@
+open OCamlMake_Common
 open Utils
 
 module It = Iterable

@@ -26,9 +26,6 @@ let run_command_aux format cb =
 
 let run_command format  = run_command_aux format (fun _ x -> x)
 
-let () =
-  assert (["line 1"; "line 2"] = run_command "echo 'line 1\nline 2'")
-
 let write_lines file lines =
   let ch = file |> File.to_string |> open_out in
   try
@@ -64,20 +61,30 @@ let read_lines file =
  * else read the cached result from cache_file. *)
 let run_command_cached ~cache_file ~timestamp ~command: format =
   let cache_file_timestamp = Timestamp.get cache_file in
-  if cache_file_timestamp <= timestamp
-  then run_command_aux format
-		       begin fun command result ->
-                       assert (Utils.dcheck (timestamp > 0.)
-                                            "Source file does not exist for <%s>."
-                                            command);
-                       Timestamp.clear cache_file;
-		       write_lines cache_file result;
-		       result
-		       end
-  else Printf.ksprintf
-         (fun command ->
-           assert (Utils.dcheck (timestamp > 0.)
-                                "Source file does not exist for <%s>."
-                                command);
-           read_lines cache_file)
-         format
+  if cache_file_timestamp <= timestamp then
+    run_command_aux format
+		    begin fun command result ->
+                    assert (Utils.dcheck (timestamp > 0.)
+                                         "Source file does not exist for <%s>."
+                                         command);
+                    Timestamp.clear cache_file;
+		    write_lines cache_file result;
+		    result
+		    end
+  else
+    Printf.ksprintf
+      (fun command ->
+        assert (Utils.dcheck (timestamp > 0.)
+                             "Source file does not exist for <%s>."
+                             command);
+        read_lines cache_file)
+      format
+
+let () =
+  assert (Log.dlog "Testing Process");
+  assert begin
+      [ "test echo command",
+        (fun () -> ["line 1"; "line 2"]
+                   = run_command "echo 'line 1\nline 2'") ;
+      ] |> Asserts.test
+    end

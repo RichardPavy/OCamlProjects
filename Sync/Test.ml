@@ -421,7 +421,7 @@ let run () =
   >|= (fun () -> settings := None)
 
   >>= (fun () -> run_tests basic_test_cases)
-  >>= run_timeout_test_case
+  (* >>= run_timeout_test_case *)
   >>= (fun () -> run_tests basic_test_cases)
 
   >>= (fun () -> Lwt_io.printlf "\n%s\nErrors: %d" (String.make 80 '=') !errors)
