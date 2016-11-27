@@ -9,4 +9,5 @@ module Option :
 sig
   val ( |?> ) : 'a option -> ('a -> 'b) -> 'b option
   val ( ?> ) : ('a -> unit) -> 'a option -> unit
+  val ( !? ) : 'a option -> 'a
 end

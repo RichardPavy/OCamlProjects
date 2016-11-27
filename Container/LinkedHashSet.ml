@@ -16,6 +16,14 @@ let add { queue ; set } value =
   Hashtbl.add set value ();
   Queue.add value queue
 
+let of_iterable it =
+  let set = create () in
+  it |> Iterable.iter begin fun e ->
+                      if not (mem set e)
+                      then add set e
+                      end;
+  set
+
 let to_iterable { queue } = Iterable.of_queue queue
 
 let () =

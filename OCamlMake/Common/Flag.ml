@@ -1,6 +1,7 @@
 open Utils
 
 type kind = ..
+type kind += Unknown_Kind
 
 let flags = Cache.fn (fun (* kind *) _ -> Property.create ())
 
@@ -17,11 +18,16 @@ let add ~kind
   in
   (flags kind).Property.add ?package generator
 
-let add_file ~kind ~file ~generator =
+let add_file ~kind ~file ~flags =
   add ~kind
       ~package: (File.parent file)
       ~predicate: (Predicate.equals file)
-      generator
+      begin fun f ->
+      assert (Utils.dcheck (f = file)
+                           "File generator for <%s> used on file <%s>"
+                           (File.to_string file) (File.to_string f));
+      flags
+      end
 
 let get kind ?(sep = " ") target =
   (flags kind).Property.get target

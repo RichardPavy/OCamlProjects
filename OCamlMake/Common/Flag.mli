@@ -1,4 +1,5 @@
 type kind = ..
+type kind += Unknown_Kind
 
 val add :
   kind: kind ->
@@ -10,7 +11,7 @@ val add :
 val add_file :
   kind: kind ->
   file: Utils.File.t ->
-  generator: string Property.generator ->
+  flags: string Utils.Iterable.t ->
   string Property.handle
 
 val get : kind -> ?sep:string -> Utils.File.t -> string

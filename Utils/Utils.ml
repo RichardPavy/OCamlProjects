@@ -69,11 +69,16 @@ module Option = struct
     match value with
     | None -> None
     | Some x -> Some (f x)
+
   let ( ?> ) f value =
     match value with
     | None -> ()
     | Some x -> f x
-  end
+
+  let ( !? ) option = match option with
+    | Some v -> v
+    | None -> failwith "Can't get the value of None"
+end
 
 let () = assert begin
              let open Option in

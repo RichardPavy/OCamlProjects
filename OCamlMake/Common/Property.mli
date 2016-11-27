@@ -7,3 +7,6 @@ type 'a t =
     get: 'a generator }
 
 val create : unit -> 'a t
+
+(** Runs the given function and then removes all handles. *)
+val process : (unit -> 'result) -> 'x handle list -> 'result

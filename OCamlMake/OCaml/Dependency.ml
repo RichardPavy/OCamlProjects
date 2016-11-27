@@ -15,7 +15,7 @@ let get extension source =
       |> OCamlDep.ocamldep
       |> Iterable.of_list
       |> It.map (Canonical.module_to_dependency (File.parent source))
-      |> It.filter ((<>) File.root)
+      |> It.strip_none
       |> It.map (File.with_ext extension)
     end |> It.of_lazy
 
@@ -28,11 +28,11 @@ let get_transitive extension source =
   let rec process dep =
     if LHS.mem deps dep |> not
     then begin
-        LHS.add deps dep;
         dep
         |> File.with_ext source_ext
         |> get extension
-        |> It.iter process
+        |> It.iter process;
+        LHS.add deps dep
       end
   in
   process (source |> File.with_ext extension);
@@ -40,13 +40,9 @@ let get_transitive extension source =
 
 (** Returns all the modules that a source depends on, including system modules. *)
 let modules source =
-  let all_modules = HashSet.create () in
   source
   |> get_transitive (File.extension source)
   |> It.map OCamlDep.modules
   |> It.map It.of_list
   |> It.flatten
-  |> It.iter begin fun m -> if HashSet.mem all_modules m |> not
-                            then HashSet.add all_modules m
-             end;
-  all_modules
+  |> HashSet.of_iterable

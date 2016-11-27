@@ -3,7 +3,6 @@ open OCamlMake_Common
 
 module It = Iterable
 module HashSet = Container_HashSet
-module OM = OCamlMake_OCamlMake
 
 (**
  * Returns the canonical module name.
@@ -66,21 +65,22 @@ type module_naming_convention = Relative | Absolute | Package | Builtin
  * a. whether the module name is canonical,
  * b. the name of the source file for the module. *)
 let module_to_convention_and_dependency folder module_name =
+  let module OM = OCamlMake_OCamlMake in
   let canonical_ml_file = module_to_canonical_ml_file folder module_name in
   if OM.has_rule canonical_ml_file then
     (* Module from the same package. *)
-    Relative, canonical_ml_file
+    Relative, Some canonical_ml_file
   else
     let canonical_ml_file = canonical_module_to_canonical_ml_file module_name in
     if OM.has_rule canonical_ml_file then
       (* Canonical package name used: Some_Package_ModuleX. *)
-      Absolute, canonical_ml_file
+      Absolute, Some canonical_ml_file
     else
       let canonical_dir = canonical_module_to_dir module_name in
       if OM.has_rule canonical_dir then
-        Package, canonical_dir
+        Package, Some canonical_dir
       else
-        Builtin, File.root
+        Builtin, None
 
 let module_to_dependency folder module_name =
   module_to_convention_and_dependency folder module_name
@@ -103,18 +103,19 @@ let canonical_file_to_file file =
                         |> Private.to_public
 
 let private_ml_file_rule target =
+  let module OM = OCamlMake_OCamlMake in
   assert (Utils.dcheck (Private.is_private target)
 		       "Target %s is not in the private folder (%s/...)"
 		       (File.to_string target) Private.private_folder);
   let source = target |> canonical_file_to_file in
   let mli_file = source |> File.with_ext "mli" in
-  let has_mli_file () = File.extension source = "ml"
-                        && OM.has_rule mli_file in
+  let has_mli_file = lazy (File.extension source = "ml"
+                           && OM.has_rule mli_file) in
   let targets = It.singleton target
   and sources =
     It.concat
       begin [ File.parent target ; source ] |> It.of_list end
-      begin lazy (if has_mli_file ()
+      begin lazy (if Lazy.force has_mli_file
                   then It.singleton mli_file
                   else It.empty ())
             |> It.of_lazy
@@ -144,7 +145,7 @@ let private_ml_file_rule target =
          |> Utils.join " ")
     in
     let module_aliases =
-      begin if has_mli_file ()
+      begin if Lazy.force has_mli_file
             then HashSet.union (OCamlDep.ocamldep source |> It.of_list)
                                (OCamlDep.ocamldep mli_file |> It.of_list)
                  |> HashSet.to_iterable
@@ -160,12 +161,13 @@ let private_ml_file_rule target =
                 end
       |> It.map
            begin fun (module_name, module_naming_convention, module_source) ->
+           let open Utils.Option in
            match module_naming_convention with
            | Absolute | Builtin -> None
            | Relative -> Some (print_relative_module_alias
-                                 module_name module_source)
+                                 module_name !?module_source)
            | Package -> Some (print_package_alias
-                                module_name module_source)
+                                module_name !?module_source)
            end
       |> It.filter (fun x -> x <> None)
       |> It.map (fun x -> match x with Some y -> y | None -> failwith "Impossible")
@@ -188,6 +190,7 @@ let private_ml_file_rule target =
   { targets ; sources ; command }
 
 let public_ml_file_rule target =
+  let module OM = OCamlMake_OCamlMake in
   assert (Utils.dcheck (Private.is_public target)
 		       "Target %s is in the private folder (%s/...)"
 		       (File.to_string target) Private.private_folder);

@@ -9,6 +9,7 @@ val mem : 'a -> 'a t -> bool
 val concat : 'a t -> 'a t -> 'a t
 val flatten : 'a t t -> 'a t
 val map : ('a -> 'b) -> 'a t -> 'b t
+val strip_none : 'a option t -> 'a t
 val top : int -> 'a t -> 'a list
 
 val make : (('a -> unit) -> unit) -> 'a t

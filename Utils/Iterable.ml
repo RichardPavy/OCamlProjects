@@ -19,6 +19,8 @@ let mem x = any ((=) x)
 let concat (it1 : 'a t) (it2 : 'a t) f = it1 f; it2 f
 let flatten it f = it (fun it' -> it' f)
 let map transfo it f = it (fun e -> f (transfo e))
+let strip_none it f = it (function | None -> ()
+                                   | Some e -> f e)
 
 let top n it =
   let l = ref [] in

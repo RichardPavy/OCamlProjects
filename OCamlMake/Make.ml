@@ -1,5 +1,8 @@
 open Utils
 
+module Flag = OCamlMake_Common_Flag
+module Property = OCamlMake_Common_Property
+
 let args () =
   let target = ref ""
   and debug = ref false in
@@ -13,26 +16,38 @@ let args () =
 
 let main () =
   let target, debug = args () in
-  if File.is_root target |> not
-  then
-    Log.block
-      "Building target <%s>" (File.to_string target)
-      (fun () ->
-        Flag.add ~kind: OCamlRules.Object
-                 (fun _ -> [ "-strict-formats" ;
-                             "-strict-sequence" ;
-                             "-unsafe" ]
-                           |> Iterable.of_list)
-        |> ignore;
-        if not debug then
-          [ OCamlRules.Executable ; OCamlRules.Object ]
-          |> List.iter begin fun kind ->
-                       Flag.add ~kind
-                                (fun _ -> Iterable.singleton "-noassert")
-                       |> ignore
-                       end;
-        OCamlMake.add_root_rule_generator OCamlRules.ocaml_rules_generator;
-	OCamlMake.build target)
+
+  OCamlMake.add_root_rule_generator
+    OCamlMake_OCaml_OCamlRules.ocaml_rules_generator;
+
+  if File.is_root target |> not then
+    begin fun () ->
+    let strict_flags =
+      Flag.add ~kind: OCamlMake_OCaml_Flags.Object
+               (fun _ -> [ "-strict-formats" ;
+                           "-strict-sequence" ;
+                           "-unsafe" ;
+                         ] |> Iterable.of_list)
+      |> Iterable.singleton
+    and debug_flags =
+      if debug then
+        Iterable.empty ()
+      else
+        let open OCamlMake_OCaml_Flags in
+        [| Executable ; Object |]
+        |> Iterable.of_array
+        |> Iterable.map begin fun kind ->
+                        Flag.add ~kind
+                                 (fun _ -> Iterable.singleton "-noassert")
+                        end
+    in
+    Iterable.concat strict_flags debug_flags
+    |> Iterable.to_list
+    |> Property.process
+         begin fun () ->
+         OCamlMake.build target
+         end
+    end |> Log.block "Building target <%s>" (File.to_string target)
 
 let () =
   assert (Cache.dclear_all_caches ());

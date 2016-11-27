@@ -12,9 +12,9 @@ val full_base : string -> File.t t
 val parent : string -> File.t t
 
 module Infix : sig
-    val ( &&$ ) : 'a t -> 'a t -> 'a t
-    val ( ||$ ) : 'a t -> 'a t -> 'a t
-    val ( !$ ) : 'a t -> 'a t
-    val ( !&&$ ) : 'a t Iterable.t -> 'a t
-    val ( !||$ ) : 'a t Iterable.t -> 'a t
-  end
+  val ( &&$ ) : 'a t -> 'a t -> 'a t
+  val ( ||$ ) : 'a t -> 'a t -> 'a t
+  val ( !$ ) : 'a t -> 'a t
+  val ( !&&$ ) : 'a t Iterable.t -> 'a t
+  val ( !||$ ) : 'a t Iterable.t -> 'a t
+end

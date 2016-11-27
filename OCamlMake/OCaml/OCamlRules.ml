@@ -52,15 +52,11 @@
  *)
 
 open Utils
-open Container
-open Common
+open OCamlMake_Common
 
 module It = Iterable
-module Deps = Dependency.Lib
-
-type Flag.kind += Interface
-type Flag.kind += Object
-type Flag.kind += Executable
+module OCamlMake = OCamlMake_OCamlMake
+module CommonRules = OCamlMake_CommonRules
 
 (**
  * A rule to build a *.cmi file
@@ -69,24 +65,29 @@ type Flag.kind += Executable
  * - Target: the *.cmi file *)
 let cmi_rule cmi_file =
   assert (Asserts.extension cmi_file "cmi");
+  let kind = Flags.Interface in
   let mli_file = cmi_file |> File.with_ext "mli" in
   let targets = It.singleton cmi_file
   and sources =
     It.concat
       (It.singleton mli_file)
-      (mli_file |> get_dependencies "cmi")
+      (mli_file |> Dependency.get "cmi")
   in
   let command () =
-    let handle = add_package_flag ~kind: Interface
-                                  ~source: mli_file
-                                  ~target: cmi_file in
-    Process.run_command
-      "ocamlfind ocamlc %s %s -c %s"
-      (flag_include_dirs sources)
-      (Flag.get Interface cmi_file)
-      (File.to_string mli_file)
-    |> ignore;
-    (let open Utils.Option in ?>LinkedList.remove handle)
+    [ Flags.packages ~kind
+                     ~source: mli_file
+                     ~target: cmi_file ;
+      Flags.include_dirs ~kind
+                         ~target: cmi_file
+                         ~sources ;
+    ] |> Property.process
+           begin fun () ->
+           Process.run_command
+             "ocamlfind ocamlc %s -c %s"
+             (Flag.get kind cmi_file)
+             (File.to_string mli_file)
+           |> ignore
+           end
   in
   let open OCamlMake in
   { targets ; sources ; command }
@@ -102,36 +103,38 @@ let make_compiled_object_rule kind =
   let extension, compiler = match kind with
     | `Bytecode -> "cmo", "ocamlc"
     | `Native -> "cmx", "ocamlopt"
-  in fun target ->
-     assert (dcheck_extension target extension);
-     let ml_file = target |> File.with_ext "ml" in
-     let mli_file = target |> File.with_ext "mli" in
-     let targets = It.singleton target
-     and sources =
-       [ It.singleton ml_file ;
-	 lazy begin if OCamlMake.has_rule mli_file
-                    then target |> File.with_ext "cmi" |> It.singleton
-                    else It.empty ()
-              end |> It.of_lazy ;
-         ml_file |> get_dependencies extension ]
-       |> It.of_list
-       |> It.flatten
-     in
-     let command () =
-       let handle = add_package_flag ~kind: Object
-                                     ~source: ml_file
-                                     ~target in
-       Process.run_command
-	 "ocamlfind %s %s %s -c %s"
-	 compiler
-         (flag_include_dirs sources)
-         (Flag.get Object target)
-	 (File.to_string ml_file)
-       |> ignore;
-       (let open Utils.Option in ?>LinkedList.remove handle)
-     in
-     let open OCamlMake in
-     { targets ; sources ; command }
+  and kind = Flags.Object
+  in
+  fun target ->
+  assert (Asserts.extension target extension);
+  let ml_file = target |> File.with_ext "ml" in
+  let mli_file = target |> File.with_ext "mli" in
+  let targets = It.singleton target
+  and sources =
+    [ It.singleton ml_file ;
+      lazy begin if OCamlMake.has_rule mli_file
+                 then target |> File.with_ext "cmi" |> It.singleton
+                 else It.empty ()
+           end |> It.of_lazy ;
+      ml_file |> Dependency.get extension ]
+    |> It.of_list
+    |> It.flatten
+  in
+  let command () =
+    [ Flags.packages ~kind ~source: ml_file ~target ;
+      Flags.include_dirs ~kind ~target ~sources ;
+    ] |> Property.process
+           begin fun () ->
+           Process.run_command
+             "ocamlfind %s %s -c %s"
+             compiler
+             (Flag.get kind target)
+             (File.to_string ml_file)
+           |> ignore
+           end
+  in
+  let open OCamlMake in
+  { targets ; sources ; command }
 
 let cmo_rule = make_compiled_object_rule `Bytecode
 let cmx_rule = make_compiled_object_rule `Native
@@ -143,33 +146,32 @@ let make_ocaml_target_file_rule kind =
     | `CMXA -> "cmxa", "cmx", "ocamlopt -a"
     | `BYTE -> "byte", "cmo", "ocamlc"
     | `EXE -> "exe", "cmx", "ocamlopt"
+  and kind = Flags.Executable
   in
   fun target ->
-  assert (dcheck_extension target target_extension);
+  assert (Asserts.extension target target_extension);
   let ml_file = target |> File.with_ext "ml" in
   let targets = It.singleton target
   and sources =
     It.concat
       (ml_file |> File.with_ext object_extension |> It.singleton)
-      (lazy (ml_file |> get_dependencies object_extension) |> It.of_lazy)
+      (lazy (ml_file |> Dependency.get object_extension) |> It.of_lazy)
   in
   let command () =
-    let handle = add_package_flag ~kind: Executable
-                                  ~source: ml_file
-                                  ~target in
-    let flags = Flag.get Executable target in
-    Process.run_command
-      "ocamlfind %s %s %s -o %s %s"
-      compiler
-      (flag_include_dirs sources)
-      flags
-      (File.to_string target)
-      (ml_file
-       |> get_transitive_dependencies object_extension
-       |> It.map File.to_string
-       |> Utils.join " ")
-    |> ignore;
-    (let open Utils.Option in ?>LinkedList.remove handle)
+    [ Flags.packages ~kind ~source: ml_file ~target ;
+      Flags.include_dirs ~kind ~target ~sources ;
+    ] |> Property.process
+           begin fun () ->
+           Process.run_command
+             "ocamlfind %s %s -o %s %s"
+             compiler
+             (Flag.get kind target)
+             (File.to_string target)
+             (ml_file |> Dependency.get_transitive object_extension
+              |> It.map File.to_string
+              |> Utils.join " ")
+           |> ignore
+           end
   in
   let open OCamlMake in
   { targets ; sources ; command }
@@ -181,78 +183,76 @@ let exe_rule = make_ocaml_target_file_rule `EXE
 
 (** Generates rules under the build/... folder. *)
 let ocaml_private_rules_generator ~folder =
-  Log.block
-    "OCaml private rules generator for <%s>" (File.to_string folder)
-    begin fun () ->
-    assert (Utils.dcheck (Private.is_private folder)
-			 "Folder %s is not a private folder (%s/...)"
-			 (File.to_string folder) Private.private_folder);
-    let public_folder = Private.to_public folder in
-    list_folder_content public_folder
-    |> It.of_list
-    |> It.map (File.child public_folder)
-    |> It.map begin fun file ->
-	      match File.extension file with
-	      | "mli" -> let file = Canonical.file_to_canonical_file file in
-                         [ Canonical.private_ml_file_rule file ;
-			   cmi_rule (File.with_ext "cmi" file) ]
-			 |> It.of_list
-	      | "ml" -> let file = Canonical.file_to_canonical_file file in
-                        [ Canonical.private_ml_file_rule file ;
-			  cmo_rule (File.with_ext "cmo" file) ;
-			  cmx_rule (File.with_ext "cmx" file) ;
-			  cma_rule (File.with_ext "cma" file) ;
-			  cmxa_rule (File.with_ext "cmxa" file) ;
-			  byte_rule (File.with_ext "byte" file) ;
-			  exe_rule (File.with_ext "exe" file) ]
-                        |> It.of_list
-              | _ when (File.is_root file |> not)
-                       && (Timestamp.kind file = Timestamp.Folder)
-                       && (File.to_string file <> Private.private_folder) ->
-                 file |> Private.to_private
-                      |> CommonRules.folder_rule
-                      |> It.singleton
-	      | _ -> It.empty ()
-	      end
-    |> It.flatten
-    |> fun rules -> OCamlMake.rule_generator_result ~rules ()
-    end
+  begin fun () ->
+  assert (Utils.dcheck (Private.is_private folder)
+		       "Folder %s is not a private folder (%s/...)"
+		       (File.to_string folder) Private.private_folder);
+  let public_folder = Private.to_public folder in
+  FolderContent.list public_folder
+  |> It.of_array
+  |> It.map (File.child public_folder)
+  |> It.map begin fun file ->
+	    match File.extension file with
+	    | "mli" -> let file = Canonical.file_to_canonical_file file in
+                       [ Canonical.private_ml_file_rule file ;
+			 cmi_rule (File.with_ext "cmi" file) ;
+		       ] |> It.of_list
+	    | "ml" -> let file = Canonical.file_to_canonical_file file in
+                      [ Canonical.private_ml_file_rule file ;
+			cmo_rule (File.with_ext "cmo" file) ;
+			cmx_rule (File.with_ext "cmx" file) ;
+			cma_rule (File.with_ext "cma" file) ;
+			cmxa_rule (File.with_ext "cmxa" file) ;
+			byte_rule (File.with_ext "byte" file) ;
+			exe_rule (File.with_ext "exe" file) ;
+                      ] |> It.of_list
+            | _ when (File.is_root file |> not)
+                     && (Timestamp.kind file = Timestamp.Folder)
+                     && (File.to_string file <> Private.private_folder) ->
+               file |> Private.to_private
+               |> CommonRules.folder_rule
+               |> It.singleton
+	    | _ -> It.empty ()
+	    end
+  |> It.flatten
+  |> fun rules -> OCamlMake.rule_generator_result ~rules ()
+  end |> Log.block "OCaml private rules generator for <%s>"
+                   (File.to_string folder)
 
 (** Generates rules for the source folders. *)
 let ocaml_public_rules_generator ~folder =
-  Log.block
-    "OCaml public rules generator for <%s>" (File.to_string folder)
-    begin fun () ->
-    assert (Utils.dcheck (Private.is_public folder)
-			 "Folder %s is a private folder (%s/...)"
-			 (File.to_string folder) Private.private_folder);
-    let folder_string = if File.is_root folder
-			then ""
-			else (File.to_string folder) ^ "/" in
-    list_folder_content folder
-    |> It.of_list
-    |> (if File.is_root folder
-        then It.filter (fun file -> file <> Private.private_folder)
-        else fun it -> it)
-    |> It.map (fun file -> File.parsef "%s%s" folder_string file)
-    |> It.map begin fun file ->
-	      begin match File.extension file with
-	      | "ml" -> [ CommonRules.noop_rule file;
-                          Canonical.public_ml_file_rule (File.with_ext "cma" file) ;
-			  Canonical.public_ml_file_rule (File.with_ext "cmxa" file) ;
-			  Canonical.public_ml_file_rule (File.with_ext "byte" file) ;
-			  Canonical.public_ml_file_rule (File.with_ext "exe" file) ]
-	      | "mli" -> [ CommonRules.noop_rule file ]
-              | "cma" | "cmxa" | "byte" | "exe" ->
-                 if (file |> (File.with_ext "ml") |> Timestamp.kind) = Timestamp.Null
-                 then [ CommonRules.noop_rule file ]
-                 else []
-              | _ -> [ CommonRules.noop_rule file ]
-              end |> It.of_list
-	      end
-    |> It.flatten
-    |> fun rules -> OCamlMake.rule_generator_result ~rules ()
-    end
+  begin fun () ->
+  assert (Utils.dcheck (Private.is_public folder)
+		       "Folder %s is a private folder (%s/...)"
+		       (File.to_string folder) Private.private_folder);
+  let folder_string = if File.is_root folder
+		      then ""
+		      else (File.to_string folder) ^ "/" in
+  FolderContent.list folder
+  |> It.of_array
+  |> (if File.is_root folder
+      then It.filter (fun file -> file <> Private.private_folder)
+      else fun it -> it)
+  |> It.map (fun file -> File.parsef "%s%s" folder_string file)
+  |> It.map begin fun file ->
+	    begin match File.extension file with
+	    | "ml" -> [ CommonRules.noop_rule file;
+                        Canonical.public_ml_file_rule (File.with_ext "cma" file) ;
+			Canonical.public_ml_file_rule (File.with_ext "cmxa" file) ;
+			Canonical.public_ml_file_rule (File.with_ext "byte" file) ;
+			Canonical.public_ml_file_rule (File.with_ext "exe" file) ]
+	    | "mli" -> [ CommonRules.noop_rule file ]
+            | "cma" | "cmxa" | "byte" | "exe" ->
+               if (file |> (File.with_ext "ml") |> Timestamp.kind) = Timestamp.Null
+               then [ CommonRules.noop_rule file ]
+               else []
+            | _ -> [ CommonRules.noop_rule file ]
+            end |> It.of_list
+	    end
+  |> It.flatten
+  |> fun rules -> OCamlMake.rule_generator_result ~rules ()
+  end |> Log.block "OCaml public rules generator for <%s>"
+                   (File.to_string folder)
 
 let build_folder_rule_generator ~folder =
   assert (Utils.dcheck (File.is_root folder)
@@ -295,22 +295,21 @@ let ocamldoc_rule_generator ~folder =
   OCamlMake.rule_generator_result ~rules ()
 
 let ocaml_rules_generator ~folder =
-  Log.block
-    "OCaml rules generator for <%s>" (File.to_string folder)
-    begin fun () ->
-    let other_generators =
-      begin
-        if Private.is_private folder then
-          [ ocaml_private_rules_generator ;
-            ocamldoc_rule_generator ]
-        else if File.is_root folder then
-          [ ocaml_public_rules_generator ;
-            build_folder_rule_generator ;
-            ocamldoc_rule_generator ]
-        else
-          [ ocaml_public_rules_generator ;
-            ocamldoc_rule_generator ]
-      end |> It.of_list
-    in
-    OCamlMake.rule_generator_result ~other_generators ()
-    end
+  begin fun () ->
+  let other_generators =
+    begin
+      if Private.is_private folder then
+        [ ocaml_private_rules_generator ;
+          ocamldoc_rule_generator ]
+      else if File.is_root folder then
+        [ ocaml_public_rules_generator ;
+          build_folder_rule_generator ;
+          ocamldoc_rule_generator ]
+      else
+        [ ocaml_public_rules_generator ;
+          ocamldoc_rule_generator ]
+    end |> It.of_list
+  in
+  OCamlMake.rule_generator_result ~other_generators ()
+  end |> Log.block "OCaml rules generator for <%s>"
+                   (File.to_string folder)

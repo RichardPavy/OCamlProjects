@@ -72,7 +72,7 @@ let public_file_rule target =
   let targets = It.singleton target
   and sources = if File.is_toplevel target
                 then It.singleton source
-                else [ File.parent target ; source ] |> It.of_list
+                else [| File.parent target ; source |] |> It.of_array
   and command () = Process.run_command
 		     "cp %s %s"
 		     (File.to_string source)

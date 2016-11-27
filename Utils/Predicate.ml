@@ -32,39 +32,39 @@ let parent parent =
   let match_parent = regexp parent in
   fun candidate -> candidate |> File.parent |> File.to_string |> match_parent
 
-module Infix =
-  struct
-    let ( &&$ ) p1 p2 = fun candidate -> p1 candidate && p2 candidate
-    let ( ||$ ) p1 p2 = fun candidate -> p1 candidate || p2 candidate
-    let ( !$ ) p = fun candidate -> not (p candidate)
-    let ( !&&$ ) predicates = predicates |> Iterable.fold ( &&$ ) (fun _ -> true)
-    let ( !||$ ) predicates = predicates |> Iterable.fold ( ||$ ) (fun _ -> false)
-  end
+module Infix = struct
+  let ( &&$ ) p1 p2 = fun candidate -> p1 candidate && p2 candidate
+  let ( ||$ ) p1 p2 = fun candidate -> p1 candidate || p2 candidate
+  let ( !$ ) p = fun candidate -> not (p candidate)
+  let ( !&&$ ) predicates = predicates |> Iterable.fold ( &&$ ) (fun _ -> true)
+  let ( !||$ ) predicates = predicates |> Iterable.fold ( ||$ ) (fun _ -> false)
+end
 
-let () = let open Infix in
-	 assert begin
-	     let p = extension "exe" &&$ (parent "binary" ||$ !$(parent "bin.*")) in
-	     let p path = path |> File.parse |> p in
-	     true
-	     && p "binary/file.exe"
-	     && not (p "binaro/file.exe")
-	     && not (p "binary/file.exec")
-	     && not (p "binary/file.Xexe")
-	     && not (p "binari/file.exe")
-	     && p "tertiary/file.exe"
-	   end;
-	 assert begin
-	     let p = extension {|mli\|ml|} in
-	     let p path = path |> File.parse |> p in
-	     p "file.ml" && p "file.mli" && not (p "file") && not (p "file.mmli")
-	   end;
-	 assert begin
-	     let p = extension {|ml\|mli|} in
-	     let p path = path |> File.parse |> p in
-	     not (p "file.mli") (* Matches on 'ml' before even trying 'mli'. *)
-	   end;
-	 assert begin
-	     let p = extension {|\(ml\|mli\)$|} in
-	     let p path = path |> File.parse |> p in
-	     p "file.ml" (* Matches on 'ml' before even trying 'mli'. *)
-	   end
+let () =
+  let open Infix in
+  assert begin
+      let p = extension "exe" &&$ (parent "binary" ||$ !$(parent "bin.*")) in
+      let p path = path |> File.parse |> p in
+      true
+      && p "binary/file.exe"
+      && not (p "binaro/file.exe")
+      && not (p "binary/file.exec")
+      && not (p "binary/file.Xexe")
+      && not (p "binari/file.exe")
+      && p "tertiary/file.exe"
+    end;
+  assert begin
+      let p = extension {|mli\|ml|} in
+      let p path = path |> File.parse |> p in
+      p "file.ml" && p "file.mli" && not (p "file") && not (p "file.mmli")
+    end;
+  assert begin
+      let p = extension {|ml\|mli|} in
+      let p path = path |> File.parse |> p in
+      not (p "file.mli") (* Matches on 'ml' before even trying 'mli'. *)
+    end;
+  assert begin
+      let p = extension {|\(ml\|mli\)$|} in
+      let p path = path |> File.parse |> p in
+      p "file.ml" (* Matches on 'ml' before even trying 'mli'. *)
+    end

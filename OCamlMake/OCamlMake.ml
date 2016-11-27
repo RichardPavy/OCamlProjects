@@ -41,35 +41,34 @@ let memoized_rule rule =
 
 (** Generates all the rules in a folder and indexes them by target. *)
 let get_rules_nocache folder =
-  Log.block
-    "Generating rules for folder: <%s>" (File.to_string folder)
-    begin fun () ->
-    let rules_by_target = Hashtbl.create 16 in
-    let record_rule rule =
-      let mrule = memoized_rule rule in
-      mrule.rule.targets
-      |> It.iter
-	   begin fun target ->
-	   assert (Utils.dcheck (Hashtbl.mem rules_by_target target |> not)
-				"Duplicate rule for target <%s>"
-				(File.to_string target));
-	   assert (Utils.dcheck (target = folder || (File.parent target) = folder)
-				"Target <%s> is not in the generated folder <%s>"
-				(File.to_string target) (File.to_string folder));
-	   assert (Log.dlog "Adding rule for target <%s>" (File.to_string target));
-	   Hashtbl.add rules_by_target target mrule
-	   end
-    in
-    let rec aux generators =
-      generators
-      |> It.map (fun rule_generator -> rule_generator ~folder)
-      |> It.iter (fun { rules ; other_generators } ->
-	     rules |> It.iter record_rule;
-	     aux other_generators)
-    in
-    root_rule_generators |> It.of_queue |> aux;
-    rules_by_target
-    end
+  begin fun () ->
+  let rules_by_target = Hashtbl.create 16 in
+  let record_rule rule =
+    let mrule = memoized_rule rule in
+    mrule.rule.targets
+    |> It.iter
+	 begin fun target ->
+	 assert (Utils.dcheck (Hashtbl.mem rules_by_target target |> not)
+			      "Duplicate rule for target <%s>"
+			      (File.to_string target));
+	 assert (Utils.dcheck (target = folder || (File.parent target) = folder)
+			      "Target <%s> is not in the generated folder <%s>"
+			      (File.to_string target) (File.to_string folder));
+	 assert (Log.dlog "Adding rule for target <%s>" (File.to_string target));
+	 Hashtbl.add rules_by_target target mrule
+	 end
+  in
+  let rec aux generators =
+    generators
+    |> It.map (fun rule_generator -> rule_generator ~folder)
+    |> It.iter (fun { rules ; other_generators } ->
+	   rules |> It.iter record_rule;
+	   aux other_generators)
+  in
+  root_rule_generators |> It.of_queue |> aux;
+  rules_by_target
+  end |> Log.block "Generating rules for folder: <%s>"
+                   (File.to_string folder)
 
 let get_rules = Cache.fn ~max_size: 100 get_rules_nocache
 
@@ -128,12 +127,11 @@ let rec build target =
   if not mrule.executed
   then
     let rule = mrule.rule in
-    Log.block "Building <%s>" (File.to_string target)
-              begin fun () ->
-              rule.sources |> It.iter build;
-              execute rule;
-              assert (Utils.dcheck (not mrule.executed)
-                                   "Cyclic dependency on <%s>?"
-                                   (File.to_string target));
-              mrule.executed <- true
-              end
+    begin fun () ->
+    rule.sources |> It.iter build;
+    execute rule;
+    assert (Utils.dcheck (not mrule.executed)
+                         "Cyclic dependency on <%s>?"
+                         (File.to_string target));
+    mrule.executed <- true
+    end |> Log.block "Building <%s>" (File.to_string target)
