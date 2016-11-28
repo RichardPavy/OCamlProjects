@@ -1,1 +1,1 @@
-let () = exit 0
+let () = failwith "Package Sync/Utils should not be imported."

@@ -81,3 +81,26 @@ let public_file_rule target =
   in
   let open OCamlMake in
   { targets ; sources ; command }
+
+let public_folder_rules_generator ~folder =
+  if Private.is_private folder then
+    OCamlMake.rule_generator_result ~rules: (It.empty ()) ()
+  else
+    begin fun () ->
+    assert (Utils.dcheck (Private.is_public folder)
+		         "Folder %s is a private folder (%s/...)"
+		         (File.to_string folder) Private.private_folder);
+    let folder_string = if File.is_root folder
+		        then ""
+		        else (File.to_string folder) ^ "/" in
+    FolderContent.list folder
+    |> It.of_array
+    |> (if File.is_root folder
+        then It.filter (fun file -> file <> Private.private_folder)
+        else fun it -> it)
+    |> It.map (fun file -> File.parsef "%s%s" folder_string file)
+    |> It.filter (fun file -> Timestamp.kind file = Timestamp.Folder)
+    |> It.map (fun file -> noop_rule file)
+    |> fun rules -> OCamlMake.rule_generator_result ~rules ()
+    end |> Log.block "public folder rules generator for <%s>"
+                     (File.to_string folder)

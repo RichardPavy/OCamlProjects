@@ -1,9 +1,15 @@
 open Utils
 
+module Slice = Container_Slice
+let command_log_data = Slice.create ()
+let command_log = Slice.to_iterable command_log_data
+let enable_command_log = ref false
+
 let run_command_aux format cb =
   Printf.ksprintf
     begin fun command ->
     Log.log "$ %s" (String.escaped command);
+    if !enable_command_log then Slice.add command_log_data command;
     let ch = Unix.open_process_in command in
     let close () =
       if Unix.close_process_in ch <> Unix.WEXITED 0 then

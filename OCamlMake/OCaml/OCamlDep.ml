@@ -36,6 +36,7 @@ let modules =
   Cache.fn
     ~max_size: 100
     begin fun ml_file ->
+    begin fun () ->
     (match File.extension ml_file with
      | "ml" | "mli" ->  ()
      | _ -> Utils.fail "Not an OCaml file: <%s>"
@@ -65,6 +66,7 @@ let modules =
     Str.split
       (Str.regexp "[ \r\n\t]+")
       (String.sub line start (String.length line - start))
+    end |> Utils.toggle Process.enable_command_log false
     end
 
 let ocamldep ml_file =

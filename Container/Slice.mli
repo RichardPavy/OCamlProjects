@@ -1,6 +1,7 @@
 type 'a t
 
 val create : ?capacity : int -> unit -> 'a t
+val clear : ?capacity : int -> 'a t -> unit
 val of_array : 'a array -> 'a t
 val of_list : 'a list -> 'a t
 val length : 'a t -> int

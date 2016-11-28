@@ -19,6 +19,10 @@ let create ?(capacity = default_capacity) () =
     start = 0 ;
     stop = 0 }
 
+let clear ?(capacity = default_capacity) slice =
+  slice.buffer <- Array.make (max 1 capacity) (Obj.magic None);
+  slice.stop <- 0
+
 let of_array a =
   { buffer = Array.copy a ;
     start = 0 ;
@@ -68,8 +72,9 @@ let sub slice start count =
   let start = slice.start + start in
   { slice with start ; stop = start + count }
 
-let to_iterable { buffer ; start ; stop } =
+let to_iterable slice =
   begin fun f ->
+  let { buffer ; start ; stop } = slice in
   for i = start to stop - 1 do
     f buffer.(i)
   done

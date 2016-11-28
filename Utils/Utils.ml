@@ -10,6 +10,10 @@ let join sep it =
     it;
   Buffer.contents b
 
+let () = assert ("" = join "-" ([] |> Iterable.of_list));
+	 assert ("a" = join "-" (["a"] |> Iterable.of_list));
+	 assert ("a-b-c" = join "-" (["a";"b";"c"] |> Iterable.of_list))
+
 let split sep string =
   let l = String.length string in
   let rec aux start i accu =
@@ -35,9 +39,25 @@ let starts_with string =
   String.length candidate >= l
   && String.sub candidate 0 l = string
 
-let () = assert ("" = join "-" ([] |> Iterable.of_list));
-	 assert ("a" = join "-" (["a"] |> Iterable.of_list));
-	 assert ("a-b-c" = join "-" (["a";"b";"c"] |> Iterable.of_list))
+let ends_with string =
+  let l = String.length string in
+  fun candidate ->
+  let cl = String.length candidate in
+  cl >= l
+  && String.sub candidate (cl - l) l = string
+
+let () =
+  assert (starts_with "hello" "hello world");
+  assert (starts_with "hello" "hello");
+  assert (starts_with "xyz" "hello world" |> not);
+  assert (starts_with "world" "hello world" |> not);
+  assert (starts_with "hello" "hell" |> not);
+
+  assert (ends_with "world" "hello world");
+  assert (ends_with "world" "world");
+  assert (ends_with "xyz" "hello world" |> not);
+  assert (ends_with "hello" "hello world" |> not);
+  assert (ends_with "hello" "ello" |> not)
 
 let fail format =
   Printf.ksprintf (fun message -> failwith message) format
@@ -63,6 +83,16 @@ let () =
   assert
     (try check false "%s %i" "abc" 123; false
      with Failure message -> message = "abc 123")
+
+let toggle reference value cb =
+  let old_value = !reference in
+  reference := value;
+  try let result = cb () in
+      reference := old_value;
+      result
+  with e ->
+    reference := old_value;
+    raise e
 
 module Option = struct
   let ( |?> ) value f =

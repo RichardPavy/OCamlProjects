@@ -234,26 +234,24 @@ let ocaml_public_rules_generator ~folder =
       then It.filter (fun file -> file <> Private.private_folder)
       else fun it -> it)
   |> It.map (fun file -> File.parsef "%s%s" folder_string file)
-  |> It.map begin fun file ->
-	    begin match File.extension file with
-	    | "ml" -> [ CommonRules.noop_rule file;
-                        Canonical.public_ml_file_rule (File.with_ext "cma" file) ;
-			Canonical.public_ml_file_rule (File.with_ext "cmxa" file) ;
-			Canonical.public_ml_file_rule (File.with_ext "byte" file) ;
-			Canonical.public_ml_file_rule (File.with_ext "exe" file) ]
-	    | "mli" -> [ CommonRules.noop_rule file ]
-            | "cma" | "cmxa" | "byte" | "exe" ->
-               if (file |> (File.with_ext "ml") |> Timestamp.kind) = Timestamp.Null
-               then [ CommonRules.noop_rule file ]
-               else []
-            | _ -> [ CommonRules.noop_rule file ]
-            end |> It.of_list
-	    end
+  |> It.map
+       begin fun file ->
+       begin match File.extension file with
+       | "ml" -> [ CommonRules.noop_rule file;
+                   Canonical.public_ml_file_rule (File.with_ext "cma" file) ;
+		   Canonical.public_ml_file_rule (File.with_ext "cmxa" file) ;
+		   Canonical.public_ml_file_rule (File.with_ext "byte" file) ;
+		   Canonical.public_ml_file_rule (File.with_ext "exe" file) ]
+       | "mli" -> [ CommonRules.noop_rule file ]
+       | _ -> []
+       end |> It.of_list
+       end
   |> It.flatten
   |> fun rules -> OCamlMake.rule_generator_result ~rules ()
   end |> Log.block "OCaml public rules generator for <%s>"
                    (File.to_string folder)
 
+(* todo!!! *)
 let build_folder_rule_generator ~folder =
   assert (Utils.dcheck (File.is_root folder)
                        "The build/ folder should be generated at the root only.");

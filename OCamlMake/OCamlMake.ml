@@ -91,6 +91,8 @@ let get_rule target =
 
 let has_rule target = try_get_rule target <> None
 
+let bootstrap_mode = ref false
+
 (** Executes a rule
     if the timestamps of the sources are after the timestamps of the targets. *)
 let execute rule =
@@ -105,9 +107,17 @@ let execute rule =
   in
   if target_timestamp < source_timestamp
   then begin
-      rule.command ();
-      rule.targets
-      |> It.iter Timestamp.clear;
+      assert (Utils.dcheck
+                (not !Process.enable_command_log)
+                "Command log should not be enabled.");
+      rule.command
+      |> Utils.toggle
+           Process.enable_command_log
+           !bootstrap_mode;
+      assert (Utils.dcheck
+                (not !Process.enable_command_log)
+                "Command log should not be enabled.");
+      rule.targets |> It.iter Timestamp.clear;
       assert begin
 	  rule.targets
 	  |> It.map (fun target -> target, Timestamp.get target)

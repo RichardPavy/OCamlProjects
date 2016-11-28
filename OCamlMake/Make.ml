@@ -20,6 +20,12 @@ let main () =
   OCamlMake.add_root_rule_generator
     OCamlMake_OCaml_OCamlRules.ocaml_rules_generator;
 
+  OCamlMake.add_root_rule_generator
+    BootstrapRule.bootstrap_rules_generator;
+
+  OCamlMake.add_root_rule_generator
+    CommonRules.public_folder_rules_generator;
+
   if File.is_root target |> not then
     begin fun () ->
     let strict_flags =

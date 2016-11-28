@@ -1,10 +1,12 @@
 TODO:
-- Better split libraries used in OCamlRules
+- rule for bootstrap script
+- rule for ocamldoc
 - Log levels, so that we can filter out unimportant logs
 - Use Slice in list Parser
 - Implement static file handler (requires custom builder)
 
 DONE:
+- Better split libraries used in OCamlRules
 - Perf comparison of using modules as virtual classes:
   Lorsqu'on caste un module vers un certain type, tous les attributs sont
   copiés.

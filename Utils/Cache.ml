@@ -55,30 +55,39 @@ let make ?max_size ?finalize f =
 let fn ?max_size ?finalize f = (make ?max_size ?finalize f).fn
 
 let () =
-  assert begin
-      let finalized = ref [] in
-      let f = fn ~max_size:3 ~finalize: (fun k v -> finalized := (k,v) :: !finalized)
-		 string_of_int in
-      f 1 |> ignore;
-      f 2 |> ignore;
-      f 3 |> ignore;
-      assert (!finalized = []);
-      f 1 |> ignore;
-      assert (!finalized = []);
-      f 4 |> ignore;
-      !finalized = [2, "2"]
-    end;
-  assert begin
-      try ignore (make ~finalize: (fun k v -> ()) ignore);
-	  false
-      with Failure _ -> true
-    end;
-  assert begin
-      let c = ref 0 in
-      let f () = incr c; if !c > 0 then failwith "Some exception" in
-      let f_cached = fn f in
-      assert (try f_cached (); false with Failure _ -> true);
-      assert (try f_cached (); false with Failure _ -> true);
-      assert (try f_cached (); false with Failure _ -> true);
-      !c = 1
-    end
+  assert (Log.dlog "Testing Cache");
+  assert
+    ([ "test finalization",
+       begin fun () ->
+       let finalized = ref [] in
+       let f = fn ~max_size:3
+                  ~finalize: (fun k v -> finalized := (k,v) :: !finalized)
+		  string_of_int in
+       f 1 |> ignore;
+       f 2 |> ignore;
+       f 3 |> ignore;
+       assert (!finalized = []);
+       f 1 |> ignore;
+       assert (!finalized = []);
+       f 4 |> ignore;
+       !finalized = [2, "2"]
+       end ;
+
+       "assert finalizer must specify max_size",
+       begin fun () ->
+       try ignore (make ~finalize: (fun k v -> ()) ignore);
+           false
+       with Failure _ -> true
+       end ;
+
+       "assert cached exception",
+       begin fun () ->
+       let c = ref 0 in
+       let f () = incr c; if !c > 0 then failwith "Some exception" in
+       let f_cached = fn f in
+       assert (try f_cached (); false with Failure _ -> true);
+       assert (try f_cached (); false with Failure _ -> true);
+       assert (try f_cached (); false with Failure _ -> true);
+       !c = 1
+       end ;
+     ] |> Asserts.test)
