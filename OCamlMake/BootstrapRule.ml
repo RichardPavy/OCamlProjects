@@ -66,6 +66,13 @@ let bootstrap_rules_generator ~folder =
       let bootstrap_folder = File.child folder bootstrap_folder_name in
       if Timestamp.get bootstrap_folder < 0. then
         CommonRules.folder_rule bootstrap_folder
+        |> begin fun rule ->
+           { rule with OCamlMake.command =
+                         begin fun () ->
+                         rule.OCamlMake.command
+                         |> Utils.toggle Process.enable_command_log false
+                         end }
+           end
         |> It.singleton
       else
         It.empty ()

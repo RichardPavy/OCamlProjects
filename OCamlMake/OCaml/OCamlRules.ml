@@ -184,6 +184,7 @@ let exe_rule = make_ocaml_target_file_rule `EXE
 (** Generates rules under the build/... folder. *)
 let ocaml_private_rules_generator ~folder =
   begin fun () ->
+  begin fun () ->
   assert (Utils.dcheck (Private.is_private folder)
 		       "Folder %s is not a private folder (%s/...)"
 		       (File.to_string folder) Private.private_folder);
@@ -216,11 +217,13 @@ let ocaml_private_rules_generator ~folder =
 	    end
   |> It.flatten
   |> fun rules -> OCamlMake.rule_generator_result ~rules ()
+  end |> Utils.toggle Process.enable_command_log false
   end |> Log.block "OCaml private rules generator for <%s>"
                    (File.to_string folder)
 
 (** Generates rules for the source folders. *)
 let ocaml_public_rules_generator ~folder =
+  begin fun () ->
   begin fun () ->
   assert (Utils.dcheck (Private.is_public folder)
 		       "Folder %s is a private folder (%s/...)"
@@ -248,6 +251,7 @@ let ocaml_public_rules_generator ~folder =
        end
   |> It.flatten
   |> fun rules -> OCamlMake.rule_generator_result ~rules ()
+  end |> Utils.toggle Process.enable_command_log false
   end |> Log.block "OCaml public rules generator for <%s>"
                    (File.to_string folder)
 
