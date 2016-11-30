@@ -255,62 +255,15 @@ let ocaml_public_rules_generator ~folder =
   end |> Log.block "OCaml public rules generator for <%s>"
                    (File.to_string folder)
 
-(* todo!!! *)
-let build_folder_rule_generator ~folder =
-  assert (Utils.dcheck (File.is_root folder)
-                       "The build/ folder should be generated at the root only.");
-  let rules = CommonRules.folder_rule (File.parse Private.private_folder)
-              |> It.singleton in
-  OCamlMake.rule_generator_result ~rules ()
-
-let ocamldoc_folder_name = "doc"
-
-let ocamldoc_rule_generator ~folder =
-  let rules =
-    if folder |> File.filename <> ocamldoc_folder_name then
-      CommonRules.folder_rule (File.child folder ocamldoc_folder_name)
-      |> It.singleton
-    else
-      let folder_string = File.to_string folder in
-      let targets = File.child folder "index.html" |> It.singleton
-      and sources = OCamlMake.get_targets (File.parent folder)
-                    |> It.filter
-                         (let open Predicate in
-                          let open Predicate.Infix in
-                          extension "ml" ||$ extension "mli")
-                    |> It.to_array |> It.of_array
-      in
-      let command () =
-        Process.run_command "rm -rf %s" folder_string |> ignore;
-        Process.run_command "mkdir %s" folder_string |> ignore;
-        Process.run_command "ocamlfind ocamldoc -html -keep-code -all-params -colorize-code -d %s %s"
-                            folder_string
-                            (sources
-                             |> It.map File.to_string
-                             |> Utils.join " ")
-        |> ignore;
-      in
-      let open OCamlMake in
-      { targets ; sources ; command }
-      |> It.singleton
-  in
-  OCamlMake.rule_generator_result ~rules ()
-
 let ocaml_rules_generator ~folder =
   begin fun () ->
   let other_generators =
     begin
       if Private.is_private folder then
-        [ ocaml_private_rules_generator ;
-          ocamldoc_rule_generator ]
-      else if File.is_root folder then
-        [ ocaml_public_rules_generator ;
-          build_folder_rule_generator ;
-          ocamldoc_rule_generator ]
+        ocaml_private_rules_generator
       else
-        [ ocaml_public_rules_generator ;
-          ocamldoc_rule_generator ]
-    end |> It.of_list
+        ocaml_public_rules_generator
+    end |> It.singleton
   in
   OCamlMake.rule_generator_result ~other_generators ()
   end |> Log.block "OCaml rules generator for <%s>"

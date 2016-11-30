@@ -57,7 +57,7 @@ let packages ~kind ~source ~target =
                 ~file: target
                 ~flags
   end
-  |> Log.block "add_package_flag <%s -> %s>"
+  |> Log.block "Flags.packages <%s -> %s>"
                (File.to_string source) (File.to_string target)
 
 

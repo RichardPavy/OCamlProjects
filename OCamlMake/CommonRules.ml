@@ -82,7 +82,7 @@ let public_file_rule target =
   let open OCamlMake in
   { targets ; sources ; command }
 
-let public_folder_rules_generator ~folder =
+let private_folder_rules_generator ~folder =
   if Private.is_private folder then
     OCamlMake.rule_generator_result ~rules: (It.empty ()) ()
   else
@@ -104,3 +104,13 @@ let public_folder_rules_generator ~folder =
     |> fun rules -> OCamlMake.rule_generator_result ~rules ()
     end |> Log.block "public folder rules generator for <%s>"
                      (File.to_string folder)
+
+let build_folder_rules_generator ~folder =
+  let rules =
+    if File.is_root folder then
+      folder_rule (File.parse Private.private_folder)
+      |> It.singleton
+    else
+      It.empty ()
+  in
+  OCamlMake.rule_generator_result ~rules ()

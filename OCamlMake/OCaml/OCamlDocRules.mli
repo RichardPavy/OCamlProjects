@@ -1,0 +1,1 @@
+val ocamldoc_rules_generator : OCamlMake_OCamlMake.rule_generator
