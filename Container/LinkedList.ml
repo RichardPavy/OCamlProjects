@@ -1,17 +1,26 @@
+(** Implementation of (double) linked lists. *)
+
 module Iterable = Utils_Iterable
 
 type 'a node = { mutable prev: 'a node ;
                  v: 'a ;
                  mutable next: 'a node }
 
+ (** Type of linked lists. *)
  and 'a t = { mutable length: int ;
               mutable first: 'a node }
 
+ (**
+  * A handle is a 'pointer' to an element of a linked list.
+  *
+  * It allows removing the element in O(1) complexity. *)
  and 'a handle = { list: 'a t ;
                    node: 'a node }
 
+(** Creates a new linked list. *)
 let create () = { length = 0 ; first = Obj.magic () }
 
+(** Adds an element to the linked list. *)
 let add list v =
   list.length <- 1 + list.length;
   if list.length = 1 then
@@ -32,9 +41,16 @@ let add list v =
     first.prev <- last;
     { list ; node = last }
 
+(** Returns the value stored under a handle. *)
 let get_value { node = { v } } = v
+
+(** Returns the size of the linked list. *)
 let length { length } = length
 
+(**
+ * Removes the element stored under the given handle.
+ *
+ * Once the handle has been removed, it must not be used again. *)
 let remove { list ; node } =
   list.length <- list.length - 1;
   if list.length = 0 then
@@ -47,27 +63,33 @@ let remove { list ; node } =
     if list.first == node then
       list.first <- next
 
+(** Returns the first element in the list. *)
 let get_first l =
   assert (l.length > 0);
   l.first.v
 
+(** Returns the last element in the list. *)
 let get_last l =
   assert (l.length > 0);
   l.first.prev.v
 
+(** Removes the first element of the list. *)
 let remove_first l =
   assert (l.length > 0);
   remove { list = l ; node = l.first }
 
+(** Removes the last element of the list. *)
 let remove_last l =
   assert (l.length > 0);
   remove { list = l ; node = l.first.prev }
 
+(** Creates a linked list from a list. *)
 let of_list l =
   let ll = create () in
   List.iter (fun e -> add ll e |> ignore) l;
   ll
 
+(** Creates a linked list from an {!Utils_Iterable.t}. *)
 let of_iterable it =
   let ll = create () in
   Iterable.iter (fun e -> add ll e |> ignore) it;
@@ -77,18 +99,23 @@ let rec to_forward_iterable_aux f node n =
   if n > 0
   then (f node.v; to_forward_iterable_aux f node.next (n-1))
 
+(** Returns an iterable that lists all the element in the linked list. *)
 let to_forward_iterable { first ; length } =
   if length = 0
   then Iterable.empty ()
   else (fun f -> to_forward_iterable_aux f first length)
        |> Iterable.make
 
+(** Alias for {!to_forward_iterable}. *)
 let to_iterable = to_forward_iterable
 
 let rec to_backward_iterable_aux f node n =
   if n > 0
   then (f node.v; to_backward_iterable_aux f node.prev (n-1))
 
+(**
+ * Returns an iterable that lists all the element in the linked list,
+ * in reverse order. *)
 let to_backward_iterable { first ; length } =
   if length = 0
   then Iterable.empty ()
@@ -107,13 +134,18 @@ let rec to_backward_list_aux node n accu =
   else
     to_backward_list_aux node.next (n-1) (node.v :: accu)
 
+(** Returns a list containing all the element in the linked list. *)
 let to_forward_list { first ; length } =
   if length = 0
   then (assert (first == Obj.magic ()); [])
   else to_forward_list_aux first.prev length []
 
+(** Alias for {!to_forward_list}. *)
 let to_list = to_forward_list
 
+(**
+ * Returns a list containing all the element in the linked list,
+ * in reverse order. *)
 let to_backward_list { first ; length } =
   if length = 0
   then (assert (first == Obj.magic ()); [])

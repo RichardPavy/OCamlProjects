@@ -1,3 +1,6 @@
+(** Maps that evict least-recently used (LRU) entries to ensure bounded size. *)
+
+(** Type of LRU maps. *)
 type ('k, 'v) t = {
     max_size: int ;
     hash_map: ('k, ('k * 'v) LinkedList.handle ref) Hashtbl.t ;
@@ -5,12 +8,17 @@ type ('k, 'v) t = {
     finalize: 'k -> 'v -> unit
   }
 
+(** Creates a new LRU map.
+ * @param finalize A method called when an element is evicted.
+ * @param max_size The maximum size of the LRU map, above which the
+ *                 least-recently used element is evicted. *)
 let create ?(finalize = fun _ _ -> ()) max_size =
   { max_size ;
     hash_map = Hashtbl.create max_size ;
     linked_list = LinkedList.create () ;
     finalize }
 
+(** Removes all the elements. *)
 let clear { hash_map ; linked_list } =
   Hashtbl.iter
     (fun _ handle_ref -> LinkedList.remove !handle_ref)
@@ -24,11 +32,13 @@ let bump linked_list handle_ref =
   LinkedList.remove handle;
   handle_ref := LinkedList.add linked_list kv
 
+(** Returns the value stored under the given key. *)
 let get { hash_map ; linked_list } key =
   let handle_ref = Hashtbl.find hash_map key in
   bump linked_list handle_ref;
   snd (LinkedList.get_value !handle_ref)
 
+(** Removes the value stored under the given key. *)
 let remove { hash_map ; linked_list } key =
   let handle_ref = Hashtbl.find hash_map key in
   Hashtbl.remove hash_map key;
@@ -49,6 +59,7 @@ let insert_aux lru_map key value =
     key
     (ref (LinkedList.add lru_map.linked_list (key, value)))
 
+(** Adds a key-value pair. Evicts the least-recently used element if necessary. *)
 let put ({ hash_map ; linked_list ; max_size } as lru_map) key value =
   begin
     match Hashtbl.find hash_map key with
@@ -60,6 +71,7 @@ let put ({ hash_map ; linked_list ; max_size } as lru_map) key value =
   assert (Hashtbl.length hash_map = LinkedList.length linked_list);
   assert (Hashtbl.length hash_map <= max_size)
 
+(** Returns an iterable that lists all the elements in the map, in LRU order. *)
 let to_iterable { linked_list } = LinkedList.to_iterable linked_list
 
 let () =

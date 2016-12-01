@@ -1,8 +1,18 @@
+(**
+ * Implementation of dynamically growing arrays.
+ *
+ * - On creation, a certain amount of space is reserved for the array.
+ * - On insertion, if the underlying [array] is full, a new 2x larger array is
+ *   created, slices grow dynamically.
+ * - Sub-slices can be created, as 'views' on the original slice.
+ *)
+
 module Foldable = Utils_Foldable
 module It = Utils_Iterable
 module Log = Utils_Log
 module Utils = Utils_Utils
 
+(** Type of Slices. *)
 type 'a t = {
     (** Dynamically allocated array. *)
     mutable buffer : 'a array ;
@@ -14,28 +24,40 @@ type 'a t = {
     mutable stop : int }
 
 let default_capacity = 8
+
+(**
+ * Creates a new slice.
+ * @param capacity The initial size of the underlying array. *)
 let create ?(capacity = default_capacity) () =
   { buffer = Array.make (max 1 capacity) (Obj.magic None) ;
     start = 0 ;
     stop = 0 }
 
+(** Removes all elements from the slice. *)
 let clear ?(capacity = default_capacity) slice =
   slice.buffer <- Array.make (max 1 capacity) (Obj.magic None);
   slice.stop <- 0
 
+(**
+ * Creates a new slice from the given array.
+ *
+ * The array is copied and not used directly. *)
 let of_array a =
   { buffer = Array.copy a ;
     start = 0 ;
     stop = Array.length a }
 
+(** Creates a new slice from the given list. *)
 let of_list l =
   let a = Array.of_list l in
   { buffer = a ;
     start = 0 ;
     stop = Array.length a }
 
+(** Returns the size of the slice (not the capacity). *)
 let length { start ; stop } = stop - start
 
+(** Returns the i{^th} element. *)
 let get slice i =
   assert (Utils.dcheck
             (0 <= i && i < length slice)
@@ -43,6 +65,7 @@ let get slice i =
             (length slice) i);
   slice.buffer.(slice.start + i)
 
+(** Inserts an element at the end of the slice. *)
 let add slice e =
   begin
     let l = Array.length slice.buffer in
@@ -58,8 +81,13 @@ let add slice e =
   slice.buffer.(slice.stop) <- e;
   slice.stop <- slice.stop + 1
 
+(** Inserts all the element in the iterable. *)
 let add_all slice it = It.iter (add slice) it
 
+(**
+ * Returns a sub-slice.
+ *
+ * Modifying the returned sub-slice may affect the original slice. *)
 let sub slice start count =
   assert (Utils.dcheck
             begin
@@ -72,6 +100,7 @@ let sub slice start count =
   let start = slice.start + start in
   { slice with start ; stop = start + count }
 
+(** Returns an {Utils_Iterable.t} that lists all elements in the slice. *)
 let to_iterable slice =
   begin fun f ->
   let { buffer ; start ; stop } = slice in
@@ -80,6 +109,7 @@ let to_iterable slice =
   done
   end |> It.make
 
+(** Returns an {Utils_Foldable.t} that lists all elements in the slice. *)
 let to_foldable (type e) { buffer ; start ; stop } =
   let module M = struct
       type element = e
@@ -95,6 +125,7 @@ let to_foldable (type e) { buffer ; start ; stop } =
   in (module M : Foldable.Impl with type element = e)
      |> Foldable.make
 
+(** Returns list that contains all elements in the slice. *)
 let to_list { buffer ; start ; stop } =
   let rec aux i accu =
     if i < start
@@ -102,11 +133,13 @@ let to_list { buffer ; start ; stop } =
     else aux (i-1) (buffer.(i) :: accu)
   in aux (stop - 1) []
 
+(** Returns a new array that contains all elements in the slice. *)
 let to_array { buffer ; start ; stop } =
   Array.init
     (stop - start)
     (fun i -> buffer.(i + start))
 
+(** Returns whether two slices are equal. *)
 let equals ?(eq = ( = ))a b =
   let l = length a in
   l = length b
