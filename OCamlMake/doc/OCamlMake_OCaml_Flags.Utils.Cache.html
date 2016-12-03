@@ -1,0 +1,78 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+<head>
+<link rel="stylesheet" href="style.css" type="text/css">
+<meta content="text/html; charset=iso-8859-1" http-equiv="Content-Type">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="Start" href="index.html">
+<link rel="previous" href="OCamlMake_OCaml_Flags.Utils.File.html">
+<link rel="next" href="OCamlMake_OCaml_Flags.Utils.Iterable.html">
+<link rel="Up" href="OCamlMake_OCaml_Flags.Utils.html">
+<link title="Index of types" rel=Appendix href="index_types.html">
+<link title="Index of extensions" rel=Appendix href="index_extensions.html">
+<link title="Index of values" rel=Appendix href="index_values.html">
+<link title="Index of modules" rel=Appendix href="index_modules.html">
+<link title="Index of module types" rel=Appendix href="index_module_types.html">
+<link title="Container_HashSet" rel="Chapter" href="Container_HashSet.html">
+<link title="Container_LinkedHashMap" rel="Chapter" href="Container_LinkedHashMap.html">
+<link title="Container_LinkedHashSet" rel="Chapter" href="Container_LinkedHashSet.html">
+<link title="Container_LinkedList" rel="Chapter" href="Container_LinkedList.html">
+<link title="Container_LruMap" rel="Chapter" href="Container_LruMap.html">
+<link title="Container_Slice" rel="Chapter" href="Container_Slice.html">
+<link title="OCamlMake_BootstrapRule" rel="Chapter" href="OCamlMake_BootstrapRule.html">
+<link title="OCamlMake_CommonRules" rel="Chapter" href="OCamlMake_CommonRules.html">
+<link title="OCamlMake_Common_Flag" rel="Chapter" href="OCamlMake_Common_Flag.html">
+<link title="OCamlMake_Common_FolderContent" rel="Chapter" href="OCamlMake_Common_FolderContent.html">
+<link title="OCamlMake_Common_Private" rel="Chapter" href="OCamlMake_Common_Private.html">
+<link title="OCamlMake_Common_Process" rel="Chapter" href="OCamlMake_Common_Process.html">
+<link title="OCamlMake_Common_Property" rel="Chapter" href="OCamlMake_Common_Property.html">
+<link title="OCamlMake_Common_Timestamp" rel="Chapter" href="OCamlMake_Common_Timestamp.html">
+<link title="OCamlMake_Make" rel="Chapter" href="OCamlMake_Make.html">
+<link title="OCamlMake_OCamlMake" rel="Chapter" href="OCamlMake_OCamlMake.html">
+<link title="OCamlMake_OCaml_Canonical" rel="Chapter" href="OCamlMake_OCaml_Canonical.html">
+<link title="OCamlMake_OCaml_Dependency" rel="Chapter" href="OCamlMake_OCaml_Dependency.html">
+<link title="OCamlMake_OCaml_Flags" rel="Chapter" href="OCamlMake_OCaml_Flags.html">
+<link title="OCamlMake_OCaml_OCamlDep" rel="Chapter" href="OCamlMake_OCaml_OCamlDep.html">
+<link title="OCamlMake_OCaml_OCamlDocRules" rel="Chapter" href="OCamlMake_OCaml_OCamlDocRules.html">
+<link title="OCamlMake_OCaml_OCamlRules" rel="Chapter" href="OCamlMake_OCaml_OCamlRules.html">
+<link title="Utils_Asserts" rel="Chapter" href="Utils_Asserts.html">
+<link title="Utils_Cache" rel="Chapter" href="Utils_Cache.html">
+<link title="Utils_CommandLine" rel="Chapter" href="Utils_CommandLine.html">
+<link title="Utils_File" rel="Chapter" href="Utils_File.html">
+<link title="Utils_Foldable" rel="Chapter" href="Utils_Foldable.html">
+<link title="Utils_Iterable" rel="Chapter" href="Utils_Iterable.html">
+<link title="Utils_Log" rel="Chapter" href="Utils_Log.html">
+<link title="Utils_Predicate" rel="Chapter" href="Utils_Predicate.html">
+<link title="Utils_Utils" rel="Chapter" href="Utils_Utils.html"><title>OCamlMake_OCaml_Flags.Utils.Cache</title>
+</head>
+<body>
+<div class="navbar"><a class="pre" href="OCamlMake_OCaml_Flags.Utils.File.html" title="OCamlMake_OCaml_Flags.Utils.File">Previous</a>
+&nbsp;<a class="up" href="OCamlMake_OCaml_Flags.Utils.html" title="OCamlMake_OCaml_Flags.Utils">Up</a>
+&nbsp;<a class="post" href="OCamlMake_OCaml_Flags.Utils.Iterable.html" title="OCamlMake_OCaml_Flags.Utils.Iterable">Next</a>
+</div>
+<h1>Module <a href="type_OCamlMake_OCaml_Flags.Utils.Cache.html">OCamlMake_OCaml_Flags.Utils.Cache</a></h1>
+
+<pre><span class="keyword">module</span> Cache: <code class="type"><a href="Utils_Cache.html">Utils_Cache</a></code></pre><hr width="100%">
+
+<pre><code><span id="TYPEcache_fn"><span class="keyword">type</span> <code class="type">('a, 'b)</code> cache_fn</span> = private {</code></pre><table class="typetable">
+<tr>
+<td align="left" valign="top" >
+<code>&nbsp;&nbsp;</code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELTcache_fn.fn">fn</span>&nbsp;: <code class="type">'a -> 'b</code>;</code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code>&nbsp;&nbsp;</code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELTcache_fn.clear">clear</span>&nbsp;: <code class="type">'a -> unit</code>;</code></td>
+
+</tr></table>
+}
+
+
+
+<pre><span id="VALdclear_all_caches"><span class="keyword">val</span> dclear_all_caches</span> : <code class="type">unit -> bool</code></pre>
+<pre><span id="VALmake"><span class="keyword">val</span> make</span> : <code class="type">?max_size:int -><br>       ?finalize:('a -> 'b -> unit) -> ('a -> 'b) -> ('a, 'b) <a href="Utils_Cache.html#TYPEcache_fn">cache_fn</a></code></pre>
+<pre><span id="VALfn"><span class="keyword">val</span> fn</span> : <code class="type">?max_size:int -> ?finalize:('a -> 'b -> unit) -> ('a -> 'b) -> 'a -> 'b</code></pre></body></html>

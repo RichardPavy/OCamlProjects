@@ -1,0 +1,115 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+<head>
+<link rel="stylesheet" href="style.css" type="text/css">
+<meta content="text/html; charset=iso-8859-1" http-equiv="Content-Type">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="Start" href="index.html">
+<link rel="next" href="OCamlMake_BootstrapRule.Utils.html">
+<link rel="Up" href="OCamlMake_BootstrapRule.html">
+<link title="Index of types" rel=Appendix href="index_types.html">
+<link title="Index of extensions" rel=Appendix href="index_extensions.html">
+<link title="Index of values" rel=Appendix href="index_values.html">
+<link title="Index of modules" rel=Appendix href="index_modules.html">
+<link title="Index of module types" rel=Appendix href="index_module_types.html">
+<link title="Container_HashSet" rel="Chapter" href="Container_HashSet.html">
+<link title="Container_LinkedHashMap" rel="Chapter" href="Container_LinkedHashMap.html">
+<link title="Container_LinkedHashSet" rel="Chapter" href="Container_LinkedHashSet.html">
+<link title="Container_LinkedList" rel="Chapter" href="Container_LinkedList.html">
+<link title="Container_LruMap" rel="Chapter" href="Container_LruMap.html">
+<link title="Container_Slice" rel="Chapter" href="Container_Slice.html">
+<link title="OCamlMake_BootstrapRule" rel="Chapter" href="OCamlMake_BootstrapRule.html">
+<link title="OCamlMake_CommonRules" rel="Chapter" href="OCamlMake_CommonRules.html">
+<link title="OCamlMake_Common_Flag" rel="Chapter" href="OCamlMake_Common_Flag.html">
+<link title="OCamlMake_Common_FolderContent" rel="Chapter" href="OCamlMake_Common_FolderContent.html">
+<link title="OCamlMake_Common_Private" rel="Chapter" href="OCamlMake_Common_Private.html">
+<link title="OCamlMake_Common_Process" rel="Chapter" href="OCamlMake_Common_Process.html">
+<link title="OCamlMake_Common_Property" rel="Chapter" href="OCamlMake_Common_Property.html">
+<link title="OCamlMake_Common_Timestamp" rel="Chapter" href="OCamlMake_Common_Timestamp.html">
+<link title="OCamlMake_Make" rel="Chapter" href="OCamlMake_Make.html">
+<link title="OCamlMake_OCamlMake" rel="Chapter" href="OCamlMake_OCamlMake.html">
+<link title="OCamlMake_OCaml_Canonical" rel="Chapter" href="OCamlMake_OCaml_Canonical.html">
+<link title="OCamlMake_OCaml_Dependency" rel="Chapter" href="OCamlMake_OCaml_Dependency.html">
+<link title="OCamlMake_OCaml_Flags" rel="Chapter" href="OCamlMake_OCaml_Flags.html">
+<link title="OCamlMake_OCaml_OCamlDep" rel="Chapter" href="OCamlMake_OCaml_OCamlDep.html">
+<link title="OCamlMake_OCaml_OCamlDocRules" rel="Chapter" href="OCamlMake_OCaml_OCamlDocRules.html">
+<link title="OCamlMake_OCaml_OCamlRules" rel="Chapter" href="OCamlMake_OCaml_OCamlRules.html">
+<link title="Utils_Asserts" rel="Chapter" href="Utils_Asserts.html">
+<link title="Utils_Cache" rel="Chapter" href="Utils_Cache.html">
+<link title="Utils_CommandLine" rel="Chapter" href="Utils_CommandLine.html">
+<link title="Utils_File" rel="Chapter" href="Utils_File.html">
+<link title="Utils_Foldable" rel="Chapter" href="Utils_Foldable.html">
+<link title="Utils_Iterable" rel="Chapter" href="Utils_Iterable.html">
+<link title="Utils_Log" rel="Chapter" href="Utils_Log.html">
+<link title="Utils_Predicate" rel="Chapter" href="Utils_Predicate.html">
+<link title="Utils_Utils" rel="Chapter" href="Utils_Utils.html"><title>OCamlMake_BootstrapRule.OCamlMake</title>
+</head>
+<body>
+<div class="navbar">&nbsp;<a class="up" href="OCamlMake_BootstrapRule.html" title="OCamlMake_BootstrapRule">Up</a>
+&nbsp;<a class="post" href="OCamlMake_BootstrapRule.Utils.html" title="OCamlMake_BootstrapRule.Utils">Next</a>
+</div>
+<h1>Module <a href="type_OCamlMake_BootstrapRule.OCamlMake.html">OCamlMake_BootstrapRule.OCamlMake</a></h1>
+
+<pre><span class="keyword">module</span> OCamlMake: <code class="type"><a href="OCamlMake_OCamlMake.html">OCamlMake_OCamlMake</a></code></pre><hr width="100%">
+
+<pre><span class="keyword">module</span> <a href="OCamlMake_OCamlMake.Utils.html">Utils</a>: <code class="code"><span class="keyword">sig</span></code> <a href="OCamlMake_OCamlMake.Utils.html">..</a> <code class="code"><span class="keyword">end</span></code></pre>
+<pre><code><span id="TYPErule"><span class="keyword">type</span> <code class="type"></code>rule</span> = {</code></pre><table class="typetable">
+<tr>
+<td align="left" valign="top" >
+<code>&nbsp;&nbsp;</code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELTrule.targets">targets</span>&nbsp;: <code class="type">Utils.File.t Utils.Iterable.t</code>;</code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code>&nbsp;&nbsp;</code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELTrule.sources">sources</span>&nbsp;: <code class="type">Utils.File.t Utils.Iterable.t</code>;</code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code>&nbsp;&nbsp;</code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELTrule.command">command</span>&nbsp;: <code class="type">unit -> unit</code>;</code></td>
+
+</tr></table>
+}
+
+
+
+<pre><span id="TYPErule_generator"><span class="keyword">type</span> <code class="type"></code>rule_generator</span> = <code class="type">folder:Utils.File.t -> <a href="OCamlMake_OCamlMake.html#TYPErule_generator_result">rule_generator_result</a></code> </pre>
+
+
+<pre><code><span id="TYPErule_generator_result"><span class="keyword">type</span> <code class="type"></code>rule_generator_result</span> = {</code></pre><table class="typetable">
+<tr>
+<td align="left" valign="top" >
+<code>&nbsp;&nbsp;</code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELTrule_generator_result.rules">rules</span>&nbsp;: <code class="type"><a href="OCamlMake_OCamlMake.html#TYPErule">rule</a> Utils.Iterable.t</code>;</code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code>&nbsp;&nbsp;</code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELTrule_generator_result.other_generators">other_generators</span>&nbsp;: <code class="type"><a href="OCamlMake_OCamlMake.html#TYPErule_generator">rule_generator</a> Utils.Iterable.t</code>;</code></td>
+
+</tr></table>
+}
+
+
+
+<pre><span id="VALrule_generator_result"><span class="keyword">val</span> rule_generator_result</span> : <code class="type">?rules:<a href="OCamlMake_OCamlMake.html#TYPErule">rule</a> Utils.Iterable.t -><br>       ?other_generators:<a href="OCamlMake_OCamlMake.html#TYPErule_generator">rule_generator</a> Utils.Iterable.t -><br>       unit -> <a href="OCamlMake_OCamlMake.html#TYPErule_generator_result">rule_generator_result</a></code></pre>
+<pre><span id="VALadd_root_rule_generator"><span class="keyword">val</span> add_root_rule_generator</span> : <code class="type"><a href="OCamlMake_OCamlMake.html#TYPErule_generator">rule_generator</a> -> unit</code></pre>
+<pre><span id="VALhas_rule"><span class="keyword">val</span> has_rule</span> : <code class="type">Utils.File.t -> bool</code></pre>
+<pre><span id="VALget_targets"><span class="keyword">val</span> get_targets</span> : <code class="type">Utils.File.t -> Utils.File.t Utils.Iterable.t</code></pre>
+<pre><span id="VALbuild"><span class="keyword">val</span> build</span> : <code class="type">Utils.File.t -> unit</code></pre><div class="info ">
+Builds a target by recursively building all its dependencies first.<br>
+</div>
+
+<pre><span id="VALbootstrap_mode"><span class="keyword">val</span> bootstrap_mode</span> : <code class="type">bool Pervasives.ref</code></pre><div class="info ">
+Internal usage only<br>
+</div>
+</body></html>

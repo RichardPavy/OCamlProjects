@@ -1,0 +1,88 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+<head>
+<link rel="stylesheet" href="style.css" type="text/css">
+<meta content="text/html; charset=iso-8859-1" http-equiv="Content-Type">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="Start" href="index.html">
+<link rel="previous" href="OCamlMake_CommonRules.html">
+<link rel="next" href="OCamlMake_Common_FolderContent.html">
+<link rel="Up" href="index.html">
+<link title="Index of types" rel=Appendix href="index_types.html">
+<link title="Index of extensions" rel=Appendix href="index_extensions.html">
+<link title="Index of values" rel=Appendix href="index_values.html">
+<link title="Index of modules" rel=Appendix href="index_modules.html">
+<link title="Index of module types" rel=Appendix href="index_module_types.html">
+<link title="Container_HashSet" rel="Chapter" href="Container_HashSet.html">
+<link title="Container_LinkedHashMap" rel="Chapter" href="Container_LinkedHashMap.html">
+<link title="Container_LinkedHashSet" rel="Chapter" href="Container_LinkedHashSet.html">
+<link title="Container_LinkedList" rel="Chapter" href="Container_LinkedList.html">
+<link title="Container_LruMap" rel="Chapter" href="Container_LruMap.html">
+<link title="Container_Slice" rel="Chapter" href="Container_Slice.html">
+<link title="OCamlMake_BootstrapRule" rel="Chapter" href="OCamlMake_BootstrapRule.html">
+<link title="OCamlMake_CommonRules" rel="Chapter" href="OCamlMake_CommonRules.html">
+<link title="OCamlMake_Common_Flag" rel="Chapter" href="OCamlMake_Common_Flag.html">
+<link title="OCamlMake_Common_FolderContent" rel="Chapter" href="OCamlMake_Common_FolderContent.html">
+<link title="OCamlMake_Common_Private" rel="Chapter" href="OCamlMake_Common_Private.html">
+<link title="OCamlMake_Common_Process" rel="Chapter" href="OCamlMake_Common_Process.html">
+<link title="OCamlMake_Common_Property" rel="Chapter" href="OCamlMake_Common_Property.html">
+<link title="OCamlMake_Common_Timestamp" rel="Chapter" href="OCamlMake_Common_Timestamp.html">
+<link title="OCamlMake_Make" rel="Chapter" href="OCamlMake_Make.html">
+<link title="OCamlMake_OCamlMake" rel="Chapter" href="OCamlMake_OCamlMake.html">
+<link title="OCamlMake_OCaml_Canonical" rel="Chapter" href="OCamlMake_OCaml_Canonical.html">
+<link title="OCamlMake_OCaml_Dependency" rel="Chapter" href="OCamlMake_OCaml_Dependency.html">
+<link title="OCamlMake_OCaml_Flags" rel="Chapter" href="OCamlMake_OCaml_Flags.html">
+<link title="OCamlMake_OCaml_OCamlDep" rel="Chapter" href="OCamlMake_OCaml_OCamlDep.html">
+<link title="OCamlMake_OCaml_OCamlDocRules" rel="Chapter" href="OCamlMake_OCaml_OCamlDocRules.html">
+<link title="OCamlMake_OCaml_OCamlRules" rel="Chapter" href="OCamlMake_OCaml_OCamlRules.html">
+<link title="Utils_Asserts" rel="Chapter" href="Utils_Asserts.html">
+<link title="Utils_Cache" rel="Chapter" href="Utils_Cache.html">
+<link title="Utils_CommandLine" rel="Chapter" href="Utils_CommandLine.html">
+<link title="Utils_File" rel="Chapter" href="Utils_File.html">
+<link title="Utils_Foldable" rel="Chapter" href="Utils_Foldable.html">
+<link title="Utils_Iterable" rel="Chapter" href="Utils_Iterable.html">
+<link title="Utils_Log" rel="Chapter" href="Utils_Log.html">
+<link title="Utils_Predicate" rel="Chapter" href="Utils_Predicate.html">
+<link title="Utils_Utils" rel="Chapter" href="Utils_Utils.html"><title>OCamlMake_Common_Flag</title>
+</head>
+<body>
+<div class="navbar"><a class="pre" href="OCamlMake_CommonRules.html" title="OCamlMake_CommonRules">Previous</a>
+&nbsp;<a class="up" href="index.html" title="Index">Up</a>
+&nbsp;<a class="post" href="OCamlMake_Common_FolderContent.html" title="OCamlMake_Common_FolderContent">Next</a>
+</div>
+<h1>Module <a href="type_OCamlMake_Common_Flag.html">OCamlMake_Common_Flag</a></h1>
+
+<pre><span class="keyword">module</span> OCamlMake_Common_Flag: <code class="code"><span class="keyword">sig</span></code> <a href="OCamlMake_Common_Flag.html">..</a> <code class="code"><span class="keyword">end</span></code></pre><div class="info module top">
+Flags for command lines used to build targets.<br>
+</div>
+<hr width="100%">
+
+<pre><span id="TYPEkind"><span class="keyword">type</span> <code class="type"></code>kind</span> = ..</pre>
+<div class="info ">
+Namespace for flags.<br>
+</div>
+
+<pre><code><span class="keyword">type</span> <code class="type"></code><a href="OCamlMake_Common_Flag.html#TYPEkind">kind</a> += </code></pre><table class="typetable">
+<tr>
+<td align="left" valign="top" >
+<code><span class="keyword">|</span></code></td>
+<td align="left" valign="top" >
+<code><span id="EXTENSIONUnknown_Kind">Unknown_Kind</span></code></td>
+
+</tr></table>
+
+
+
+<pre><span id="VALadd"><span class="keyword">val</span> add</span> : <code class="type">kind:<a href="OCamlMake_Common_Flag.html#TYPEkind">kind</a> -><br>       ?package:<a href="Utils_File.html#TYPEt">Utils_File.t</a> -><br>       ?predicate:<a href="Utils_File.html#TYPEt">Utils_File.t</a> <a href="Utils_Predicate.html#TYPEt">Utils_Predicate.t</a> -><br>       string <a href="OCamlMake_Common_Property.html#TYPEgenerator">OCamlMake_Common_Property.generator</a> -><br>       string <a href="OCamlMake_Common_Property.html#TYPEhandle">OCamlMake_Common_Property.handle</a></code></pre><div class="info ">
+ Register a flag generator to add flags for all the files matching
+ the given predicate.<br>
+</div>
+
+<pre><span id="VALadd_file"><span class="keyword">val</span> add_file</span> : <code class="type">kind:<a href="OCamlMake_Common_Flag.html#TYPEkind">kind</a> -><br>       file:<a href="Utils_File.html#TYPEt">Utils_File.t</a> -><br>       flags:string <a href="Utils_Iterable.html#TYPEt">Utils_Iterable.t</a> -> string <a href="OCamlMake_Common_Property.html#TYPEhandle">OCamlMake_Common_Property.handle</a></code></pre><div class="info ">
+Register flags for the given file only.<br>
+</div>
+
+<pre><span id="VALget"><span class="keyword">val</span> get</span> : <code class="type"><a href="OCamlMake_Common_Flag.html#TYPEkind">kind</a> -> ?sep:string -> <a href="Utils_File.html#TYPEt">Utils_File.t</a> -> string</code></pre><div class="info ">
+Returns all the flags that apply to a file.<br>
+</div>
+</body></html>

@@ -1,0 +1,138 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+<head>
+<link rel="stylesheet" href="style.css" type="text/css">
+<meta content="text/html; charset=iso-8859-1" http-equiv="Content-Type">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="Start" href="index.html">
+<link rel="previous" href="OCamlMake_OCaml_OCamlDocRules.html">
+<link rel="next" href="Utils_Asserts.html">
+<link rel="Up" href="index.html">
+<link title="Index of types" rel=Appendix href="index_types.html">
+<link title="Index of extensions" rel=Appendix href="index_extensions.html">
+<link title="Index of values" rel=Appendix href="index_values.html">
+<link title="Index of modules" rel=Appendix href="index_modules.html">
+<link title="Index of module types" rel=Appendix href="index_module_types.html">
+<link title="Container_HashSet" rel="Chapter" href="Container_HashSet.html">
+<link title="Container_LinkedHashMap" rel="Chapter" href="Container_LinkedHashMap.html">
+<link title="Container_LinkedHashSet" rel="Chapter" href="Container_LinkedHashSet.html">
+<link title="Container_LinkedList" rel="Chapter" href="Container_LinkedList.html">
+<link title="Container_LruMap" rel="Chapter" href="Container_LruMap.html">
+<link title="Container_Slice" rel="Chapter" href="Container_Slice.html">
+<link title="OCamlMake_BootstrapRule" rel="Chapter" href="OCamlMake_BootstrapRule.html">
+<link title="OCamlMake_CommonRules" rel="Chapter" href="OCamlMake_CommonRules.html">
+<link title="OCamlMake_Common_Flag" rel="Chapter" href="OCamlMake_Common_Flag.html">
+<link title="OCamlMake_Common_FolderContent" rel="Chapter" href="OCamlMake_Common_FolderContent.html">
+<link title="OCamlMake_Common_Private" rel="Chapter" href="OCamlMake_Common_Private.html">
+<link title="OCamlMake_Common_Process" rel="Chapter" href="OCamlMake_Common_Process.html">
+<link title="OCamlMake_Common_Property" rel="Chapter" href="OCamlMake_Common_Property.html">
+<link title="OCamlMake_Common_Timestamp" rel="Chapter" href="OCamlMake_Common_Timestamp.html">
+<link title="OCamlMake_Make" rel="Chapter" href="OCamlMake_Make.html">
+<link title="OCamlMake_OCamlMake" rel="Chapter" href="OCamlMake_OCamlMake.html">
+<link title="OCamlMake_OCaml_Canonical" rel="Chapter" href="OCamlMake_OCaml_Canonical.html">
+<link title="OCamlMake_OCaml_Dependency" rel="Chapter" href="OCamlMake_OCaml_Dependency.html">
+<link title="OCamlMake_OCaml_Flags" rel="Chapter" href="OCamlMake_OCaml_Flags.html">
+<link title="OCamlMake_OCaml_OCamlDep" rel="Chapter" href="OCamlMake_OCaml_OCamlDep.html">
+<link title="OCamlMake_OCaml_OCamlDocRules" rel="Chapter" href="OCamlMake_OCaml_OCamlDocRules.html">
+<link title="OCamlMake_OCaml_OCamlRules" rel="Chapter" href="OCamlMake_OCaml_OCamlRules.html">
+<link title="Utils_Asserts" rel="Chapter" href="Utils_Asserts.html">
+<link title="Utils_Cache" rel="Chapter" href="Utils_Cache.html">
+<link title="Utils_CommandLine" rel="Chapter" href="Utils_CommandLine.html">
+<link title="Utils_File" rel="Chapter" href="Utils_File.html">
+<link title="Utils_Foldable" rel="Chapter" href="Utils_Foldable.html">
+<link title="Utils_Iterable" rel="Chapter" href="Utils_Iterable.html">
+<link title="Utils_Log" rel="Chapter" href="Utils_Log.html">
+<link title="Utils_Predicate" rel="Chapter" href="Utils_Predicate.html">
+<link title="Utils_Utils" rel="Chapter" href="Utils_Utils.html"><title>OCamlMake_OCaml_OCamlRules</title>
+</head>
+<body>
+<div class="navbar"><a class="pre" href="OCamlMake_OCaml_OCamlDocRules.html" title="OCamlMake_OCaml_OCamlDocRules">Previous</a>
+&nbsp;<a class="up" href="index.html" title="Index">Up</a>
+&nbsp;<a class="post" href="Utils_Asserts.html" title="Utils_Asserts">Next</a>
+</div>
+<h1>Module <a href="type_OCamlMake_OCaml_OCamlRules.html">OCamlMake_OCaml_OCamlRules</a></h1>
+
+<pre><span class="keyword">module</span> OCamlMake_OCaml_OCamlRules: <code class="code"><span class="keyword">sig</span></code> <a href="OCamlMake_OCaml_OCamlRules.html">..</a> <code class="code"><span class="keyword">end</span></code></pre><div class="info module top">
+ How dependencies work across folders.
+<p>
+
+ 1. Example:
+ ./Main.ml
+ ./Server.ml
+ ./Worker.ml
+ ./Protocol/Rpc.ml
+ ./Protocol/JsonProtocol.ml
+ ./Protocol/HtmlProtocol.ml
+ ./Protocol/NativeProtocol.ml
+ ./Protocol/Html/Parser.ml
+ ./Protocol/Html/HtmlEntities.ml
+ ./Utils/Log.ml
+ ./Utils/UrlEncode.ml
+<p>
+
+ 2. How a module can be referenced:
+<p>
+
+ 2.a) by relative name, for modules in the same package
+ This means that for any module using other modules in the same package, the
+ following declarations are added at the top:
+ file &lt;Protocol/Rpc.ml&gt; depends on module names 'JsonProtocol' and 'HtmlProtocol',
+ file &lt;build/Protocol/Rpc.ml&gt; will be like:
+   &lt;&lt;&lt;
+   module JsonProtocol = Protocol_JsonProtocol
+   module HtmlProtocol = Protocol_HtmlProtocol
+   ... rest of the Protocol/Rpc.ml file
+   &gt;&gt;&gt;
+<p>
+
+ 2.b) by absolute name: Protocol_Html_HtmlEntities
+<p>
+
+ 2.c) using folders-as-packages: Protocol.Html.Parser, Protocol_Html.Parser
+ !! building folders-as-packages create lots of dependencies !!
+ file &lt;Protocol.ml&gt; is generated as:
+   &lt;&lt;&lt;
+   module Rpc = Protocol_Rpc
+   module JsonProtocol = Protocol_JsonProtocol
+   module HtmlProtocol = Protocol_HtmlProtocol
+   module NativeProtocol = Protocol_NativeProtocol
+   module Html = struct
+       module Parser = Protocol_Html_Parser
+       module HtmlEntities = Protocol_Html_HtmlEntities
+     end
+   &gt;&gt;&gt;
+<p>
+
+ file &lt;Protocol_Html.ml&gt; is generated as:
+   &lt;&lt;&lt;
+   module Parser = Protocol_Html_Parser
+   module HtmlEntities = Protocol_Html_HtmlEntities
+   &gt;&gt;&gt;<br>
+</div>
+<hr width="100%">
+
+<pre><span class="keyword">module</span> <a href="OCamlMake_OCaml_OCamlRules.Utils.html">Utils</a>: <code class="code"><span class="keyword">sig</span></code> <a href="OCamlMake_OCaml_OCamlRules.Utils.html">..</a> <code class="code"><span class="keyword">end</span></code></pre>
+<pre><span id="VALcmi_rule"><span class="keyword">val</span> cmi_rule</span> : <code class="type">Utils.File.t -> <a href="OCamlMake_OCamlMake.html#TYPErule">OCamlMake_OCamlMake.rule</a></code></pre><div class="info ">
+ A rule to build a *.cmi file<ul>
+<li>Sources: the corresponding *.mli file
+            all the *.cmi files of dependencies</li>
+<li>Target: the *.cmi file</li>
+</ul>
+<br>
+</div>
+
+<pre><span id="VALcmo_rule"><span class="keyword">val</span> cmo_rule</span> : <code class="type">Utils.File.t -> <a href="OCamlMake_OCamlMake.html#TYPErule">OCamlMake_OCamlMake.rule</a></code></pre>
+<pre><span id="VALcmx_rule"><span class="keyword">val</span> cmx_rule</span> : <code class="type">Utils.File.t -> <a href="OCamlMake_OCamlMake.html#TYPErule">OCamlMake_OCamlMake.rule</a></code></pre>
+<pre><span id="VALcma_rule"><span class="keyword">val</span> cma_rule</span> : <code class="type">Utils.File.t -> <a href="OCamlMake_OCamlMake.html#TYPErule">OCamlMake_OCamlMake.rule</a></code></pre>
+<pre><span id="VALcmxa_rule"><span class="keyword">val</span> cmxa_rule</span> : <code class="type">Utils.File.t -> <a href="OCamlMake_OCamlMake.html#TYPErule">OCamlMake_OCamlMake.rule</a></code></pre>
+<pre><span id="VALexe_rule"><span class="keyword">val</span> exe_rule</span> : <code class="type">Utils.File.t -> <a href="OCamlMake_OCamlMake.html#TYPErule">OCamlMake_OCamlMake.rule</a></code></pre>
+<pre><span id="VALbyte_rule"><span class="keyword">val</span> byte_rule</span> : <code class="type">Utils.File.t -> <a href="OCamlMake_OCamlMake.html#TYPErule">OCamlMake_OCamlMake.rule</a></code></pre>
+<pre><span id="VALocaml_private_rules_generator"><span class="keyword">val</span> ocaml_private_rules_generator</span> : <code class="type"><a href="OCamlMake_OCamlMake.html#TYPErule_generator">OCamlMake_OCamlMake.rule_generator</a></code></pre><div class="info ">
+Generates rules under the build/... folder.<br>
+</div>
+
+<pre><span id="VALocaml_public_rules_generator"><span class="keyword">val</span> ocaml_public_rules_generator</span> : <code class="type"><a href="OCamlMake_OCamlMake.html#TYPErule_generator">OCamlMake_OCamlMake.rule_generator</a></code></pre><div class="info ">
+Generates rules for the source folders.<br>
+</div>
+
+<pre><span id="VALocaml_rules_generator"><span class="keyword">val</span> ocaml_rules_generator</span> : <code class="type"><a href="OCamlMake_OCamlMake.html#TYPErule_generator">OCamlMake_OCamlMake.rule_generator</a></code></pre></body></html>

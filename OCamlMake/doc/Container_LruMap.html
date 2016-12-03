@@ -1,0 +1,93 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+<head>
+<link rel="stylesheet" href="style.css" type="text/css">
+<meta content="text/html; charset=iso-8859-1" http-equiv="Content-Type">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="Start" href="index.html">
+<link rel="previous" href="Container_LinkedList.html">
+<link rel="next" href="Container_Slice.html">
+<link rel="Up" href="index.html">
+<link title="Index of types" rel=Appendix href="index_types.html">
+<link title="Index of extensions" rel=Appendix href="index_extensions.html">
+<link title="Index of values" rel=Appendix href="index_values.html">
+<link title="Index of modules" rel=Appendix href="index_modules.html">
+<link title="Index of module types" rel=Appendix href="index_module_types.html">
+<link title="Container_HashSet" rel="Chapter" href="Container_HashSet.html">
+<link title="Container_LinkedHashMap" rel="Chapter" href="Container_LinkedHashMap.html">
+<link title="Container_LinkedHashSet" rel="Chapter" href="Container_LinkedHashSet.html">
+<link title="Container_LinkedList" rel="Chapter" href="Container_LinkedList.html">
+<link title="Container_LruMap" rel="Chapter" href="Container_LruMap.html">
+<link title="Container_Slice" rel="Chapter" href="Container_Slice.html">
+<link title="OCamlMake_BootstrapRule" rel="Chapter" href="OCamlMake_BootstrapRule.html">
+<link title="OCamlMake_CommonRules" rel="Chapter" href="OCamlMake_CommonRules.html">
+<link title="OCamlMake_Common_Flag" rel="Chapter" href="OCamlMake_Common_Flag.html">
+<link title="OCamlMake_Common_FolderContent" rel="Chapter" href="OCamlMake_Common_FolderContent.html">
+<link title="OCamlMake_Common_Private" rel="Chapter" href="OCamlMake_Common_Private.html">
+<link title="OCamlMake_Common_Process" rel="Chapter" href="OCamlMake_Common_Process.html">
+<link title="OCamlMake_Common_Property" rel="Chapter" href="OCamlMake_Common_Property.html">
+<link title="OCamlMake_Common_Timestamp" rel="Chapter" href="OCamlMake_Common_Timestamp.html">
+<link title="OCamlMake_Make" rel="Chapter" href="OCamlMake_Make.html">
+<link title="OCamlMake_OCamlMake" rel="Chapter" href="OCamlMake_OCamlMake.html">
+<link title="OCamlMake_OCaml_Canonical" rel="Chapter" href="OCamlMake_OCaml_Canonical.html">
+<link title="OCamlMake_OCaml_Dependency" rel="Chapter" href="OCamlMake_OCaml_Dependency.html">
+<link title="OCamlMake_OCaml_Flags" rel="Chapter" href="OCamlMake_OCaml_Flags.html">
+<link title="OCamlMake_OCaml_OCamlDep" rel="Chapter" href="OCamlMake_OCaml_OCamlDep.html">
+<link title="OCamlMake_OCaml_OCamlDocRules" rel="Chapter" href="OCamlMake_OCaml_OCamlDocRules.html">
+<link title="OCamlMake_OCaml_OCamlRules" rel="Chapter" href="OCamlMake_OCaml_OCamlRules.html">
+<link title="Utils_Asserts" rel="Chapter" href="Utils_Asserts.html">
+<link title="Utils_Cache" rel="Chapter" href="Utils_Cache.html">
+<link title="Utils_CommandLine" rel="Chapter" href="Utils_CommandLine.html">
+<link title="Utils_File" rel="Chapter" href="Utils_File.html">
+<link title="Utils_Foldable" rel="Chapter" href="Utils_Foldable.html">
+<link title="Utils_Iterable" rel="Chapter" href="Utils_Iterable.html">
+<link title="Utils_Log" rel="Chapter" href="Utils_Log.html">
+<link title="Utils_Predicate" rel="Chapter" href="Utils_Predicate.html">
+<link title="Utils_Utils" rel="Chapter" href="Utils_Utils.html"><title>Container_LruMap</title>
+</head>
+<body>
+<div class="navbar"><a class="pre" href="Container_LinkedList.html" title="Container_LinkedList">Previous</a>
+&nbsp;<a class="up" href="index.html" title="Index">Up</a>
+&nbsp;<a class="post" href="Container_Slice.html" title="Container_Slice">Next</a>
+</div>
+<h1>Module <a href="type_Container_LruMap.html">Container_LruMap</a></h1>
+
+<pre><span class="keyword">module</span> Container_LruMap: <code class="code"><span class="keyword">sig</span></code> <a href="Container_LruMap.html">..</a> <code class="code"><span class="keyword">end</span></code></pre><div class="info module top">
+Maps that evict least-recently used (LRU) entries to ensure bounded size.<br>
+</div>
+<hr width="100%">
+
+<pre><span id="TYPEt"><span class="keyword">type</span> <code class="type">('k, 'v)</code> t</span> </pre>
+<div class="info ">
+Type of LRU maps.<br>
+</div>
+
+
+<pre><span id="VALcreate"><span class="keyword">val</span> create</span> : <code class="type">?finalize:('k -> 'v -> unit) -> int -> ('k, 'v) <a href="Container_LruMap.html#TYPEt">t</a></code></pre><div class="info ">
+Creates a new LRU map.
+<br>
+</div>
+<div class="param_info"><code class="code">finalize</code> : A method called when an element is evicted.</div>
+<div class="param_info"><code class="code">max_size</code> : The maximum size of the LRU map, above which the
+                 least-recently used element is evicted.</div>
+
+<pre><span id="VALclear"><span class="keyword">val</span> clear</span> : <code class="type">('k, 'v) <a href="Container_LruMap.html#TYPEt">t</a> -> unit</code></pre><div class="info ">
+Removes all the elements.<br>
+</div>
+
+<pre><span id="VALget"><span class="keyword">val</span> get</span> : <code class="type">('k, 'v) <a href="Container_LruMap.html#TYPEt">t</a> -> 'k -> 'v</code></pre><div class="info ">
+Returns the value stored under the given key.<br>
+</div>
+
+<pre><span id="VALremove"><span class="keyword">val</span> remove</span> : <code class="type">('k, 'v) <a href="Container_LruMap.html#TYPEt">t</a> -> 'k -> unit</code></pre><div class="info ">
+Removes the value stored under the given key.<br>
+</div>
+
+<pre><span id="VALput"><span class="keyword">val</span> put</span> : <code class="type">('k, 'v) <a href="Container_LruMap.html#TYPEt">t</a> -> 'k -> 'v -> unit</code></pre><div class="info ">
+Adds a key-value pair. Evicts the least-recently used element if necessary.<br>
+</div>
+
+<pre><span id="VALto_iterable"><span class="keyword">val</span> to_iterable</span> : <code class="type">('k, 'v) <a href="Container_LruMap.html#TYPEt">t</a> -> ('k * 'v) <a href="Utils_Iterable.html#TYPEt">Utils_Iterable.t</a></code></pre><div class="info ">
+Returns an iterable that lists all the elements in the map, in LRU order.<br>
+</div>
+</body></html>

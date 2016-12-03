@@ -1,0 +1,80 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+<head>
+<link rel="stylesheet" href="style.css" type="text/css">
+<meta content="text/html; charset=iso-8859-1" http-equiv="Content-Type">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="Start" href="index.html">
+<link rel="previous" href="OCamlMake_OCaml_OCamlDep.Utils.Cache.html">
+<link rel="next" href="OCamlMake_OCaml_OCamlDep.Utils.Utils.html">
+<link rel="Up" href="OCamlMake_OCaml_OCamlDep.Utils.html">
+<link title="Index of types" rel=Appendix href="index_types.html">
+<link title="Index of extensions" rel=Appendix href="index_extensions.html">
+<link title="Index of values" rel=Appendix href="index_values.html">
+<link title="Index of modules" rel=Appendix href="index_modules.html">
+<link title="Index of module types" rel=Appendix href="index_module_types.html">
+<link title="Container_HashSet" rel="Chapter" href="Container_HashSet.html">
+<link title="Container_LinkedHashMap" rel="Chapter" href="Container_LinkedHashMap.html">
+<link title="Container_LinkedHashSet" rel="Chapter" href="Container_LinkedHashSet.html">
+<link title="Container_LinkedList" rel="Chapter" href="Container_LinkedList.html">
+<link title="Container_LruMap" rel="Chapter" href="Container_LruMap.html">
+<link title="Container_Slice" rel="Chapter" href="Container_Slice.html">
+<link title="OCamlMake_BootstrapRule" rel="Chapter" href="OCamlMake_BootstrapRule.html">
+<link title="OCamlMake_CommonRules" rel="Chapter" href="OCamlMake_CommonRules.html">
+<link title="OCamlMake_Common_Flag" rel="Chapter" href="OCamlMake_Common_Flag.html">
+<link title="OCamlMake_Common_FolderContent" rel="Chapter" href="OCamlMake_Common_FolderContent.html">
+<link title="OCamlMake_Common_Private" rel="Chapter" href="OCamlMake_Common_Private.html">
+<link title="OCamlMake_Common_Process" rel="Chapter" href="OCamlMake_Common_Process.html">
+<link title="OCamlMake_Common_Property" rel="Chapter" href="OCamlMake_Common_Property.html">
+<link title="OCamlMake_Common_Timestamp" rel="Chapter" href="OCamlMake_Common_Timestamp.html">
+<link title="OCamlMake_Make" rel="Chapter" href="OCamlMake_Make.html">
+<link title="OCamlMake_OCamlMake" rel="Chapter" href="OCamlMake_OCamlMake.html">
+<link title="OCamlMake_OCaml_Canonical" rel="Chapter" href="OCamlMake_OCaml_Canonical.html">
+<link title="OCamlMake_OCaml_Dependency" rel="Chapter" href="OCamlMake_OCaml_Dependency.html">
+<link title="OCamlMake_OCaml_Flags" rel="Chapter" href="OCamlMake_OCaml_Flags.html">
+<link title="OCamlMake_OCaml_OCamlDep" rel="Chapter" href="OCamlMake_OCaml_OCamlDep.html">
+<link title="OCamlMake_OCaml_OCamlDocRules" rel="Chapter" href="OCamlMake_OCaml_OCamlDocRules.html">
+<link title="OCamlMake_OCaml_OCamlRules" rel="Chapter" href="OCamlMake_OCaml_OCamlRules.html">
+<link title="Utils_Asserts" rel="Chapter" href="Utils_Asserts.html">
+<link title="Utils_Cache" rel="Chapter" href="Utils_Cache.html">
+<link title="Utils_CommandLine" rel="Chapter" href="Utils_CommandLine.html">
+<link title="Utils_File" rel="Chapter" href="Utils_File.html">
+<link title="Utils_Foldable" rel="Chapter" href="Utils_Foldable.html">
+<link title="Utils_Iterable" rel="Chapter" href="Utils_Iterable.html">
+<link title="Utils_Log" rel="Chapter" href="Utils_Log.html">
+<link title="Utils_Predicate" rel="Chapter" href="Utils_Predicate.html">
+<link title="Utils_Utils" rel="Chapter" href="Utils_Utils.html"><title>OCamlMake_OCaml_OCamlDep.Utils.Iterable</title>
+</head>
+<body>
+<div class="navbar"><a class="pre" href="OCamlMake_OCaml_OCamlDep.Utils.Cache.html" title="OCamlMake_OCaml_OCamlDep.Utils.Cache">Previous</a>
+&nbsp;<a class="up" href="OCamlMake_OCaml_OCamlDep.Utils.html" title="OCamlMake_OCaml_OCamlDep.Utils">Up</a>
+&nbsp;<a class="post" href="OCamlMake_OCaml_OCamlDep.Utils.Utils.html" title="OCamlMake_OCaml_OCamlDep.Utils.Utils">Next</a>
+</div>
+<h1>Module <a href="type_OCamlMake_OCaml_OCamlDep.Utils.Iterable.html">OCamlMake_OCaml_OCamlDep.Utils.Iterable</a></h1>
+
+<pre><span class="keyword">module</span> Iterable: <code class="type"><a href="Utils_Iterable.html">Utils_Iterable</a></code></pre><hr width="100%">
+
+<pre><span id="TYPEt"><span class="keyword">type</span> <code class="type">'a</code> t</span> </pre>
+
+
+<pre><span id="VALfilter"><span class="keyword">val</span> filter</span> : <code class="type">('a -> bool) -> 'a <a href="Utils_Iterable.html#TYPEt">t</a> -> 'a <a href="Utils_Iterable.html#TYPEt">t</a></code></pre>
+<pre><span id="VALany"><span class="keyword">val</span> any</span> : <code class="type">('a -> bool) -> 'a <a href="Utils_Iterable.html#TYPEt">t</a> -> bool</code></pre>
+<pre><span id="VALall"><span class="keyword">val</span> all</span> : <code class="type">('a -> bool) -> 'a <a href="Utils_Iterable.html#TYPEt">t</a> -> bool</code></pre>
+<pre><span id="VALiter"><span class="keyword">val</span> iter</span> : <code class="type">('a -> unit) -> 'a <a href="Utils_Iterable.html#TYPEt">t</a> -> unit</code></pre>
+<pre><span id="VALfold"><span class="keyword">val</span> fold</span> : <code class="type">('b -> 'a -> 'b) -> 'b -> 'a <a href="Utils_Iterable.html#TYPEt">t</a> -> 'b</code></pre>
+<pre><span id="VALmem"><span class="keyword">val</span> mem</span> : <code class="type">'a -> 'a <a href="Utils_Iterable.html#TYPEt">t</a> -> bool</code></pre>
+<pre><span id="VALconcat"><span class="keyword">val</span> concat</span> : <code class="type">'a <a href="Utils_Iterable.html#TYPEt">t</a> -> 'a <a href="Utils_Iterable.html#TYPEt">t</a> -> 'a <a href="Utils_Iterable.html#TYPEt">t</a></code></pre>
+<pre><span id="VALflatten"><span class="keyword">val</span> flatten</span> : <code class="type">'a <a href="Utils_Iterable.html#TYPEt">t</a> <a href="Utils_Iterable.html#TYPEt">t</a> -> 'a <a href="Utils_Iterable.html#TYPEt">t</a></code></pre>
+<pre><span id="VALmap"><span class="keyword">val</span> map</span> : <code class="type">('a -> 'b) -> 'a <a href="Utils_Iterable.html#TYPEt">t</a> -> 'b <a href="Utils_Iterable.html#TYPEt">t</a></code></pre>
+<pre><span id="VALstrip_none"><span class="keyword">val</span> strip_none</span> : <code class="type">'a option <a href="Utils_Iterable.html#TYPEt">t</a> -> 'a <a href="Utils_Iterable.html#TYPEt">t</a></code></pre>
+<pre><span id="VALtop"><span class="keyword">val</span> top</span> : <code class="type">int -> 'a <a href="Utils_Iterable.html#TYPEt">t</a> -> 'a list</code></pre>
+<pre><span id="VALmake"><span class="keyword">val</span> make</span> : <code class="type">(('a -> unit) -> unit) -> 'a <a href="Utils_Iterable.html#TYPEt">t</a></code></pre>
+<pre><span id="VALsingleton"><span class="keyword">val</span> singleton</span> : <code class="type">'a -> 'a <a href="Utils_Iterable.html#TYPEt">t</a></code></pre>
+<pre><span id="VALempty"><span class="keyword">val</span> empty</span> : <code class="type">unit -> 'a <a href="Utils_Iterable.html#TYPEt">t</a></code></pre>
+<pre><span id="VALof_list"><span class="keyword">val</span> of_list</span> : <code class="type">'a list -> 'a <a href="Utils_Iterable.html#TYPEt">t</a></code></pre>
+<pre><span id="VALof_array"><span class="keyword">val</span> of_array</span> : <code class="type">'a array -> 'a <a href="Utils_Iterable.html#TYPEt">t</a></code></pre>
+<pre><span id="VALof_queue"><span class="keyword">val</span> of_queue</span> : <code class="type">'a Queue.t -> 'a <a href="Utils_Iterable.html#TYPEt">t</a></code></pre>
+<pre><span id="VALof_hashtbl"><span class="keyword">val</span> of_hashtbl</span> : <code class="type">('k, 'v) Hashtbl.t -> ('k * 'v) <a href="Utils_Iterable.html#TYPEt">t</a></code></pre>
+<pre><span id="VALof_lazy"><span class="keyword">val</span> of_lazy</span> : <code class="type">'a <a href="Utils_Iterable.html#TYPEt">t</a> Lazy.t -> 'a <a href="Utils_Iterable.html#TYPEt">t</a></code></pre>
+<pre><span id="VALto_list"><span class="keyword">val</span> to_list</span> : <code class="type">'a <a href="Utils_Iterable.html#TYPEt">t</a> -> 'a list</code></pre>
+<pre><span id="VALto_array"><span class="keyword">val</span> to_array</span> : <code class="type">'a <a href="Utils_Iterable.html#TYPEt">t</a> -> 'a array</code></pre></body></html>

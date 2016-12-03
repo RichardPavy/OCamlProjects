@@ -1,0 +1,81 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+<head>
+<link rel="stylesheet" href="style.css" type="text/css">
+<meta content="text/html; charset=iso-8859-1" http-equiv="Content-Type">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="Start" href="index.html">
+<link rel="previous" href="OCamlMake_Common_Private.html">
+<link rel="next" href="OCamlMake_Common_Property.html">
+<link rel="Up" href="index.html">
+<link title="Index of types" rel=Appendix href="index_types.html">
+<link title="Index of extensions" rel=Appendix href="index_extensions.html">
+<link title="Index of values" rel=Appendix href="index_values.html">
+<link title="Index of modules" rel=Appendix href="index_modules.html">
+<link title="Index of module types" rel=Appendix href="index_module_types.html">
+<link title="Container_HashSet" rel="Chapter" href="Container_HashSet.html">
+<link title="Container_LinkedHashMap" rel="Chapter" href="Container_LinkedHashMap.html">
+<link title="Container_LinkedHashSet" rel="Chapter" href="Container_LinkedHashSet.html">
+<link title="Container_LinkedList" rel="Chapter" href="Container_LinkedList.html">
+<link title="Container_LruMap" rel="Chapter" href="Container_LruMap.html">
+<link title="Container_Slice" rel="Chapter" href="Container_Slice.html">
+<link title="OCamlMake_BootstrapRule" rel="Chapter" href="OCamlMake_BootstrapRule.html">
+<link title="OCamlMake_CommonRules" rel="Chapter" href="OCamlMake_CommonRules.html">
+<link title="OCamlMake_Common_Flag" rel="Chapter" href="OCamlMake_Common_Flag.html">
+<link title="OCamlMake_Common_FolderContent" rel="Chapter" href="OCamlMake_Common_FolderContent.html">
+<link title="OCamlMake_Common_Private" rel="Chapter" href="OCamlMake_Common_Private.html">
+<link title="OCamlMake_Common_Process" rel="Chapter" href="OCamlMake_Common_Process.html">
+<link title="OCamlMake_Common_Property" rel="Chapter" href="OCamlMake_Common_Property.html">
+<link title="OCamlMake_Common_Timestamp" rel="Chapter" href="OCamlMake_Common_Timestamp.html">
+<link title="OCamlMake_Make" rel="Chapter" href="OCamlMake_Make.html">
+<link title="OCamlMake_OCamlMake" rel="Chapter" href="OCamlMake_OCamlMake.html">
+<link title="OCamlMake_OCaml_Canonical" rel="Chapter" href="OCamlMake_OCaml_Canonical.html">
+<link title="OCamlMake_OCaml_Dependency" rel="Chapter" href="OCamlMake_OCaml_Dependency.html">
+<link title="OCamlMake_OCaml_Flags" rel="Chapter" href="OCamlMake_OCaml_Flags.html">
+<link title="OCamlMake_OCaml_OCamlDep" rel="Chapter" href="OCamlMake_OCaml_OCamlDep.html">
+<link title="OCamlMake_OCaml_OCamlDocRules" rel="Chapter" href="OCamlMake_OCaml_OCamlDocRules.html">
+<link title="OCamlMake_OCaml_OCamlRules" rel="Chapter" href="OCamlMake_OCaml_OCamlRules.html">
+<link title="Utils_Asserts" rel="Chapter" href="Utils_Asserts.html">
+<link title="Utils_Cache" rel="Chapter" href="Utils_Cache.html">
+<link title="Utils_CommandLine" rel="Chapter" href="Utils_CommandLine.html">
+<link title="Utils_File" rel="Chapter" href="Utils_File.html">
+<link title="Utils_Foldable" rel="Chapter" href="Utils_Foldable.html">
+<link title="Utils_Iterable" rel="Chapter" href="Utils_Iterable.html">
+<link title="Utils_Log" rel="Chapter" href="Utils_Log.html">
+<link title="Utils_Predicate" rel="Chapter" href="Utils_Predicate.html">
+<link title="Utils_Utils" rel="Chapter" href="Utils_Utils.html"><title>OCamlMake_Common_Process</title>
+</head>
+<body>
+<div class="navbar"><a class="pre" href="OCamlMake_Common_Private.html" title="OCamlMake_Common_Private">Previous</a>
+&nbsp;<a class="up" href="index.html" title="Index">Up</a>
+&nbsp;<a class="post" href="OCamlMake_Common_Property.html" title="OCamlMake_Common_Property">Next</a>
+</div>
+<h1>Module <a href="type_OCamlMake_Common_Process.html">OCamlMake_Common_Process</a></h1>
+
+<pre><span class="keyword">module</span> OCamlMake_Common_Process: <code class="code"><span class="keyword">sig</span></code> <a href="OCamlMake_Common_Process.html">..</a> <code class="code"><span class="keyword">end</span></code></pre><div class="info module top">
+Helper functions to run command lines.<br>
+</div>
+<hr width="100%">
+
+<pre><span id="VALcommand_log"><span class="keyword">val</span> command_log</span> : <code class="type">string <a href="Utils_Iterable.html#TYPEt">Utils_Iterable.t</a></code></pre><div class="info ">
+ The commands issued during the build process, if command logging is
+ enabled. See <a href="OCamlMake_Common_Process.html#VALenable_command_log"><code class="code"><span class="constructor">OCamlMake_Common_Process</span>.enable_command_log</code></a><br>
+</div>
+
+<pre><span id="VALenable_command_log"><span class="keyword">val</span> enable_command_log</span> : <code class="type">bool Pervasives.ref</code></pre><div class="info ">
+Whether logging commands is enabled. Defaults to <code class="code"><span class="keyword">false</span></code>.<br>
+</div>
+
+<pre><span id="VALrun_command"><span class="keyword">val</span> run_command</span> : <code class="type">('a, unit, string, string list) Pervasives.format4 -> 'a</code></pre><div class="info ">
+Executes the given command line.<br>
+</div>
+
+<pre><span id="VALrun_command_cached"><span class="keyword">val</span> run_command_cached</span> : <code class="type">cache_file:<a href="Utils_File.html#TYPEt">Utils_File.t</a> -><br>       timestamp:float -><br>       command:('a, unit, string, string list) Pervasives.format4 -> 'a</code></pre><div class="info ">
+ Same result as <a href="OCamlMake_Common_Process.html#VALrun_command"><code class="code"><span class="constructor">OCamlMake_Common_Process</span>.run_command</code></a>.
+<p>
+
+ if the timestamp from <code class="code">cache_file</code> &lt; <code class="code">timestamp</code>
+ then run the command again and store the result in cache_file
+ else read the cached result from cache_file.<br>
+</div>
+</body></html>
