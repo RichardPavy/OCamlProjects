@@ -1,3 +1,5 @@
+(** Shared rules. *)
+
 open OCamlMake_Common
 open Utils
 
@@ -82,6 +84,9 @@ let public_file_rule target =
   let open OCamlMake in
   { targets ; sources ; command }
 
+(**
+ * Rule generator to create private folders under build/
+ * corresponding to each public folder. *)
 let private_folder_rules_generator ~folder =
   if Private.is_private folder then
     OCamlMake.rule_generator_result ~rules: (It.empty ()) ()
@@ -102,9 +107,12 @@ let private_folder_rules_generator ~folder =
     |> It.filter (fun file -> Timestamp.kind file = Timestamp.Folder)
     |> It.map (fun file -> noop_rule file)
     |> fun rules -> OCamlMake.rule_generator_result ~rules ()
-    end |> Log.block "public folder rules generator for <%s>"
+    end |> Log.block "private folder rules generator for <%s>"
                      (File.to_string folder)
 
+(**
+ * Rule generator to create the build/ folder containing intermediary
+ * build files. *)
 let build_folder_rules_generator ~folder =
   let rules =
     if File.is_root folder then

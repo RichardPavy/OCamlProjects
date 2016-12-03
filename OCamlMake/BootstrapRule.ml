@@ -1,3 +1,5 @@
+(** Rules that generate scripts to build a target. *)
+
 open Utils
 open OCamlMake_Common
 
@@ -58,6 +60,14 @@ let bootstrap_rule target =
   let open OCamlMake in
   { targets ; sources ; command }
 
+(**
+ * A rule generator to build *.make.sh scripts.
+ *
+ * "*.make.sh" scripts build a target, record all the command lines executed
+ * while doing it, and produce a script that can build a target from scratch
+ * without using the OCamlMake binary.
+ *
+ * This is useful to distribute source code to third-parties. *)
 let bootstrap_rules_generator ~folder =
   let rules =
     if Private.is_private folder then

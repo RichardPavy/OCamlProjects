@@ -1,8 +1,16 @@
+(** Helper functions to run command lines. *)
+
 open Utils
 
 module Slice = Container_Slice
 let command_log_data = Slice.create ()
+
+(**
+ * The commands issued during the build process, if command logging is
+ * enabled. See {!enable_command_log} *)
 let command_log = Slice.to_iterable command_log_data
+
+(** Whether logging commands is enabled. Defaults to [false]. *)
 let enable_command_log = ref false
 
 let run_command_aux format cb =
@@ -30,6 +38,7 @@ let run_command_aux format cb =
     end
     format
 
+(** Executes the given command line. *)
 let run_command format  = run_command_aux format (fun _ x -> x)
 
 let write_lines file lines =
@@ -60,7 +69,7 @@ let read_lines file =
 	    Utils.fail "Unable to read %s" file |> raise
 
 (**
- * Same result as run_command.
+ * Same result as {!run_command}.
  *
  * if the timestamp from [cache_file] < [timestamp]
  * then run the command again and store the result in cache_file

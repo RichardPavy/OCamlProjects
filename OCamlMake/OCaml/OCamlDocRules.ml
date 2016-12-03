@@ -34,7 +34,7 @@ let ocamldoc_rule ml_file =
     ] |> Property.process
            begin fun () ->
            Process.run_command
-             "ocamlfind ocamldoc -html -colorize-code -m A -stars %s -d %s %s"
+             "ocamlfind ocamldoc -html -colorize-code -sort -m A -stars %s -d %s %s"
              (Flag.get kind target)
              ocamldoc_folder_string
              (It.concat

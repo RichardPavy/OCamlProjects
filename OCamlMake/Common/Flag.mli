@@ -3,15 +3,15 @@ type kind += Unknown_Kind
 
 val add :
   kind: kind ->
-  ?package: Utils.File.t ->
-  ?predicate: Utils.File.t Utils.Predicate.t ->
-  string Property.generator ->
-  string Property.handle
+  ?package: Utils_File.t ->
+  ?predicate: Utils_File.t Utils_Predicate.t ->
+  string OCamlMake_Common_Property.generator ->
+  string OCamlMake_Common_Property.handle
 
 val add_file :
   kind: kind ->
-  file: Utils.File.t ->
-  flags: string Utils.Iterable.t ->
-  string Property.handle
+  file: Utils_File.t ->
+  flags: string Utils_Iterable.t ->
+  string OCamlMake_Common_Property.handle
 
-val get : kind -> ?sep:string -> Utils.File.t -> string
+val get : kind -> ?sep:string -> Utils_File.t -> string
