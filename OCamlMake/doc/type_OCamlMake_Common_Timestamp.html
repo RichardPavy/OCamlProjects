@@ -42,20 +42,8 @@
 </head>
 <body>
 <code class="code"><span class="keyword">sig</span><br>
-&nbsp;&nbsp;<span class="keyword">module</span>&nbsp;<span class="constructor">Utils</span>&nbsp;:<br>
-&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">sig</span><br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">module</span>&nbsp;<span class="constructor">Predicate</span>&nbsp;=&nbsp;<span class="constructor">Utils_Predicate</span><br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">module</span>&nbsp;<span class="constructor">Foldable</span>&nbsp;=&nbsp;<span class="constructor">Utils_Foldable</span><br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">module</span>&nbsp;<span class="constructor">File</span>&nbsp;=&nbsp;<span class="constructor">Utils_File</span><br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">module</span>&nbsp;<span class="constructor">Cache</span>&nbsp;=&nbsp;<span class="constructor">Utils_Cache</span><br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">module</span>&nbsp;<span class="constructor">Iterable</span>&nbsp;=&nbsp;<span class="constructor">Utils_Iterable</span><br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">module</span>&nbsp;<span class="constructor">Utils</span>&nbsp;=&nbsp;<span class="constructor">Utils_Utils</span><br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">module</span>&nbsp;<span class="constructor">Log</span>&nbsp;=&nbsp;<span class="constructor">Utils_Log</span><br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">module</span>&nbsp;<span class="constructor">Asserts</span>&nbsp;=&nbsp;<span class="constructor">Utils_Asserts</span><br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">module</span>&nbsp;<span class="constructor">CommandLine</span>&nbsp;=&nbsp;<span class="constructor">Utils_CommandLine</span><br>
-&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">end</span><br>
 &nbsp;&nbsp;<span class="keyword">type</span>&nbsp;file_kind&nbsp;=&nbsp;<span class="constructor">Special</span>&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="constructor">Folder</span>&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="constructor">File</span>&nbsp;<span class="keywordsign">|</span>&nbsp;<span class="constructor">Null</span><br>
-&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;kind&nbsp;:&nbsp;<span class="constructor">Utils</span>.<span class="constructor">File</span>.t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">OCamlMake_Common_Timestamp</span>.file_kind<br>
-&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;get&nbsp;:&nbsp;<span class="constructor">Utils</span>.<span class="constructor">File</span>.t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;float<br>
-&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;clear&nbsp;:&nbsp;<span class="constructor">Utils</span>.<span class="constructor">File</span>.t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;unit<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;kind&nbsp;:&nbsp;<span class="constructor">Utils_File</span>.t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;<span class="constructor">OCamlMake_Common_Timestamp</span>.file_kind<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;get&nbsp;:&nbsp;<span class="constructor">Utils_File</span>.t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;float<br>
+&nbsp;&nbsp;<span class="keyword">val</span>&nbsp;clear&nbsp;:&nbsp;<span class="constructor">Utils_File</span>.t&nbsp;<span class="keywordsign">-&gt;</span>&nbsp;unit<br>
 <span class="keyword">end</span></code></body></html>

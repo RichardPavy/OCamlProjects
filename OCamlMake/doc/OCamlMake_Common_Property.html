@@ -53,16 +53,26 @@
 <h1>Module <a href="type_OCamlMake_Common_Property.html">OCamlMake_Common_Property</a></h1>
 
 <pre><span class="keyword">module</span> OCamlMake_Common_Property: <code class="code"><span class="keyword">sig</span></code> <a href="OCamlMake_Common_Property.html">..</a> <code class="code"><span class="keyword">end</span></code></pre><div class="info module top">
-Runs the given function and then removes all handles.<br>
+ Implementation for file properties.
+<p>
+
+ Properties are attached to <a href="Utils_File.html#TYPEt"><code class="code"><span class="constructor">Utils_File</span>.t</code></a>. Each value <a href="OCamlMake_Common_Property.html#TYPEt"><code class="code"><span class="constructor">OCamlMake_Common_Property</span>.t</code></a> contains a list
+ of generators that are used to generate properties. Properties are used to
+ implement flags.<br>
 </div>
 <hr width="100%">
 
 <pre><span class="keyword">module</span> <a href="OCamlMake_Common_Property.Container.html">Container</a>: <code class="code"><span class="keyword">sig</span></code> <a href="OCamlMake_Common_Property.Container.html">..</a> <code class="code"><span class="keyword">end</span></code></pre>
-<pre><span class="keyword">module</span> <a href="OCamlMake_Common_Property.Utils.html">Utils</a>: <code class="code"><span class="keyword">sig</span></code> <a href="OCamlMake_Common_Property.Utils.html">..</a> <code class="code"><span class="keyword">end</span></code></pre>
-<pre><span id="TYPEgenerator"><span class="keyword">type</span> <code class="type">'a</code> generator</span> = <code class="type">Utils.File.t -> 'a Utils.Iterable.t</code> </pre>
+<pre><span id="TYPEgenerator"><span class="keyword">type</span> <code class="type">'a</code> generator</span> = <code class="type"><a href="Utils_File.html#TYPEt">Utils_File.t</a> -> 'a <a href="Utils_Iterable.html#TYPEt">Utils_Iterable.t</a></code> </pre>
+<div class="info ">
+Type for generators: functions that generate properties.<br>
+</div>
 
 
 <pre><span id="TYPEhandle"><span class="keyword">type</span> <code class="type">'a</code> handle</span> = <code class="type">'a <a href="OCamlMake_Common_Property.html#TYPEgenerator">generator</a> Container.LinkedList.handle</code> </pre>
+<div class="info ">
+Type for handles, allowing to deregister previously added generators.<br>
+</div>
 
 
 <pre><code><span id="TYPEt"><span class="keyword">type</span> <code class="type">'a</code> t</span> = {</code></pre><table class="typetable">
@@ -70,22 +80,42 @@ Runs the given function and then removes all handles.<br>
 <td align="left" valign="top" >
 <code>&nbsp;&nbsp;</code></td>
 <td align="left" valign="top" >
-<code><span id="TYPEELTt.add">add</span>&nbsp;: <code class="type">?package:Utils.File.t -><br>       'a <a href="OCamlMake_Common_Property.html#TYPEgenerator">generator</a> -> 'a <a href="OCamlMake_Common_Property.html#TYPEhandle">handle</a></code>;</code></td>
-
+<code><span id="TYPEELTt.add">add</span>&nbsp;: <code class="type">?package:<a href="Utils_File.html#TYPEt">Utils_File.t</a> -><br>       'a <a href="OCamlMake_Common_Property.html#TYPEgenerator">generator</a> -> 'a <a href="OCamlMake_Common_Property.html#TYPEhandle">handle</a></code>;</code></td>
+<td class="typefieldcomment" align="left" valign="top" ><code>(*</code></td><td class="typefieldcomment" align="left" valign="top" ><div class="info ">
+Adds a property generator. If package is not given, the generator will
+ be called for all folders.<br>
+</div>
+</td><td class="typefieldcomment" align="left" valign="bottom" ><code>*)</code></td>
 </tr>
 <tr>
 <td align="left" valign="top" >
 <code>&nbsp;&nbsp;</code></td>
 <td align="left" valign="top" >
-<code><span id="TYPEELTt.get">get</span>&nbsp;: <code class="type">'a <a href="OCamlMake_Common_Property.html#TYPEgenerator">generator</a></code>;</code></td>
+<code><span id="TYPEELTt.get">get</span>&nbsp;: <code class="type"><a href="Utils_File.html#TYPEt">Utils_File.t</a> -> 'a <a href="Utils_Iterable.html#TYPEt">Utils_Iterable.t</a></code>;</code></td>
+<td class="typefieldcomment" align="left" valign="top" ><code>(*</code></td><td class="typefieldcomment" align="left" valign="top" ><div class="info ">
+Returns all the properties that apply to a file.
+<p>
 
+ Generators are called in insertion order.<br>
+</div>
+</td><td class="typefieldcomment" align="left" valign="bottom" ><code>*)</code></td>
 </tr></table>
 }
 
+<div class="info ">
+Type for properties<br>
+</div>
 
 
-<pre><span id="VALcreate"><span class="keyword">val</span> create</span> : <code class="type">unit -> 'a <a href="OCamlMake_Common_Property.html#TYPEt">t</a></code></pre>
+<pre><span id="VALcreate"><span class="keyword">val</span> create</span> : <code class="type">unit -> 'a <a href="OCamlMake_Common_Property.html#TYPEt">t</a></code></pre><div class="info ">
+Creates a new property.<br>
+</div>
+
 <pre><span id="VALprocess"><span class="keyword">val</span> process</span> : <code class="type">(unit -> 'result) -> 'x <a href="OCamlMake_Common_Property.html#TYPEhandle">handle</a> list -> 'result</code></pre><div class="info ">
-Runs the given function and then removes all handles.<br>
+ Runs the given function and then removes all handles.
+<p>
+
+ Usage: <pre class="codepre"><code class="code">   [ property.add x ; priperty.add y ; ... ]
+   |&gt; process <span class="keyword">begin</span> <span class="keyword">fun</span> f () <span class="keywordsign">-&gt;</span> ... <span class="keyword">end</span> </code></pre><br>
 </div>
 </body></html>

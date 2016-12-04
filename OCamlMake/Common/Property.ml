@@ -1,14 +1,34 @@
+(**
+ * Implementation for file properties.
+ *
+ * Properties are attached to {!Utils_File.t}. Each value {!t} contains a list
+ * of generators that are used to generate properties. Properties are used to
+ * implement flags.  *)
+
 open Utils
 module LL = Container_LinkedList
 
+(** Type for generators: functions that generate properties. *)
 type 'a generator = File.t -> 'a Iterable.t
+
+(** Type for handles, allowing to deregister previously added generators. *)
 type 'a handle = 'a generator LL.handle
+
+(** Type for properties *)
 type 'a t =
   { add: ?package: File.t ->
          'a generator ->
          'a handle ;
-    get: 'a generator }
+    (** Adds a property generator. If package is not given, the generator will
+     * be called for all folders. *)
 
+    get: File.t -> 'a Iterable.t
+    (** Returns all the properties that apply to a file.
+     *
+     * Generators are called in insertion order.*)
+  }
+
+(** Creates a new property. *)
 let create () =
   let generators = Cache.fn (fun (* package option *) _ -> LL.create()) in
   let add ?package generator =
@@ -26,6 +46,12 @@ let create () =
     Iterable.of_queue queue
   in { add ; get }
 
+(**
+ * Runs the given function and then removes all handles.
+ *
+ * Usage: {[
+ *   [ property.add x ; priperty.add y ; ... ]
+ *   |> process begin fun f () -> ... end ]} *)
 let process f handles =
   try let result = f () in
       List.iter LL.remove handles;

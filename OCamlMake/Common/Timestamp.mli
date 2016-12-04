@@ -4,6 +4,6 @@ type file_kind =
   | File
   | Null
 
-val kind : Utils.File.t -> file_kind
-val get : Utils.File.t -> float
-val clear : Utils.File.t -> unit
+val kind : Utils_File.t -> file_kind
+val get : Utils_File.t -> float
+val clear : Utils_File.t -> unit

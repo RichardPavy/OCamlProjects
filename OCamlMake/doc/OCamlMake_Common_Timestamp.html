@@ -52,9 +52,11 @@
 </div>
 <h1>Module <a href="type_OCamlMake_Common_Timestamp.html">OCamlMake_Common_Timestamp</a></h1>
 
-<pre><span class="keyword">module</span> OCamlMake_Common_Timestamp: <code class="code"><span class="keyword">sig</span></code> <a href="OCamlMake_Common_Timestamp.html">..</a> <code class="code"><span class="keyword">end</span></code></pre><hr width="100%">
+<pre><span class="keyword">module</span> OCamlMake_Common_Timestamp: <code class="code"><span class="keyword">sig</span></code> <a href="OCamlMake_Common_Timestamp.html">..</a> <code class="code"><span class="keyword">end</span></code></pre><div class="info module top">
+Last-modification timestamps of files.<br>
+</div>
+<hr width="100%">
 
-<pre><span class="keyword">module</span> <a href="OCamlMake_Common_Timestamp.Utils.html">Utils</a>: <code class="code"><span class="keyword">sig</span></code> <a href="OCamlMake_Common_Timestamp.Utils.html">..</a> <code class="code"><span class="keyword">end</span></code></pre>
 <pre><code><span id="TYPEfile_kind"><span class="keyword">type</span> <code class="type"></code>file_kind</span> = </code></pre><table class="typetable">
 <tr>
 <td align="left" valign="top" >
@@ -85,8 +87,25 @@
 
 </tr></table>
 
+<div class="info ">
+Enum for the type of file.<br>
+</div>
 
 
-<pre><span id="VALkind"><span class="keyword">val</span> kind</span> : <code class="type">Utils.File.t -> <a href="OCamlMake_Common_Timestamp.html#TYPEfile_kind">file_kind</a></code></pre>
-<pre><span id="VALget"><span class="keyword">val</span> get</span> : <code class="type">Utils.File.t -> float</code></pre>
-<pre><span id="VALclear"><span class="keyword">val</span> clear</span> : <code class="type">Utils.File.t -> unit</code></pre></body></html>
+<pre><span id="VALkind"><span class="keyword">val</span> kind</span> : <code class="type"><a href="Utils_File.html#TYPEt">Utils_File.t</a> -> <a href="OCamlMake_Common_Timestamp.html#TYPEfile_kind">file_kind</a></code></pre><div class="info ">
+Returns the type of a file.<br>
+</div>
+
+<pre><span id="VALget"><span class="keyword">val</span> get</span> : <code class="type"><a href="Utils_File.html#TYPEt">Utils_File.t</a> -> float</code></pre><div class="info ">
+Returns the last modification timestamp of a file.<br>
+</div>
+
+<pre><span id="VALclear"><span class="keyword">val</span> clear</span> : <code class="type"><a href="Utils_File.html#TYPEt">Utils_File.t</a> -> unit</code></pre><div class="info ">
+ Clears the cache for all the files that share the same base name
+ (i.e.: same name, different extensions).
+<p>
+
+ This is useful to erase the cache after a file is compiled. Usually
+ compiled object files share the same base name as the source file.<br>
+</div>
+</body></html>

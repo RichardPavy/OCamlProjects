@@ -1,12 +1,11 @@
-type 'a generator = Utils.File.t -> 'a Utils.Iterable.t
+type 'a generator = Utils_File.t -> 'a Utils_Iterable.t
 type 'a handle = 'a generator Container.LinkedList.handle
 type 'a t =
-  { add: ?package: Utils.File.t ->
+  { add: ?package: Utils_File.t ->
          'a generator ->
          'a handle ;
-    get: 'a generator }
+    get: Utils_File.t -> 'a Utils_Iterable.t }
 
 val create : unit -> 'a t
 
-(** Runs the given function and then removes all handles. *)
 val process : (unit -> 'result) -> 'x handle list -> 'result

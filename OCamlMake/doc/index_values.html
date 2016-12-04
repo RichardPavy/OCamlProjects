@@ -175,7 +175,11 @@ Returns the public source file from the private canonical file.
 <tr><td><a href="Utils_File.html#VALchroot">chroot</a> [<a href="Utils_File.html">Utils_File</a>]</td>
 <td></td></tr>
 <tr><td><a href="OCamlMake_Common_Timestamp.html#VALclear">clear</a> [<a href="OCamlMake_Common_Timestamp.html">OCamlMake_Common_Timestamp</a>]</td>
-<td></td></tr>
+<td><div class="info">
+ Clears the cache for all the files that share the same base name
+ (i.e.: same name, different extensions).
+</div>
+</td></tr>
 <tr><td><a href="Container_Slice.html#VALclear">clear</a> [<a href="Container_Slice.html">Container_Slice</a>]</td>
 <td><div class="info">
 Removes all elements from the slice.
@@ -216,7 +220,10 @@ Clears the cache for the given folder.
 <tr><td><a href="Utils_Foldable.html#VALconcat">concat</a> [<a href="Utils_Foldable.html">Utils_Foldable</a>]</td>
 <td></td></tr>
 <tr><td><a href="OCamlMake_Common_Property.html#VALcreate">create</a> [<a href="OCamlMake_Common_Property.html">OCamlMake_Common_Property</a>]</td>
-<td></td></tr>
+<td><div class="info">
+Creates a new property.
+</div>
+</td></tr>
 <tr><td><a href="Container_Slice.html#VALcreate">create</a> [<a href="Container_Slice.html">Container_Slice</a>]</td>
 <td><div class="info">
  Creates a new slice.
@@ -346,7 +353,10 @@ Returns the private canonical file from the public source file.
 </div>
 </td></tr>
 <tr><td><a href="OCamlMake_Common_Timestamp.html#VALget">get</a> [<a href="OCamlMake_Common_Timestamp.html">OCamlMake_Common_Timestamp</a>]</td>
-<td></td></tr>
+<td><div class="info">
+Returns the last modification timestamp of a file.
+</div>
+</td></tr>
 <tr><td><a href="OCamlMake_Common_Flag.html#VALget">get</a> [<a href="OCamlMake_Common_Flag.html">OCamlMake_Common_Flag</a>]</td>
 <td><div class="info">
 Returns all the flags that apply to a file.
@@ -442,7 +452,10 @@ Returns an iterable that lists all the keys in insertion order.
 </div>
 </td></tr>
 <tr><td><a href="OCamlMake_Common_Timestamp.html#VALkind">kind</a> [<a href="OCamlMake_Common_Timestamp.html">OCamlMake_Common_Timestamp</a>]</td>
-<td></td></tr>
+<td><div class="info">
+Returns the type of a file.
+</div>
+</td></tr>
 <tr><td align="left"><br>L</td></tr>
 <tr><td><a href="Container_Slice.html#VALlength">length</a> [<a href="Container_Slice.html">Container_Slice</a>]</td>
 <td><div class="info">
@@ -645,7 +658,7 @@ Name of the private folder that will contain intermediary build files.
 <td></td></tr>
 <tr><td><a href="OCamlMake_Common_Property.html#VALprocess">process</a> [<a href="OCamlMake_Common_Property.html">OCamlMake_Common_Property</a>]</td>
 <td><div class="info">
-Runs the given function and then removes all handles.
+ Runs the given function and then removes all handles.
 </div>
 </td></tr>
 <tr><td><a href="OCamlMake_CommonRules.html#VALpublic_file_rule">public_file_rule</a> [<a href="OCamlMake_CommonRules.html">OCamlMake_CommonRules</a>]</td>

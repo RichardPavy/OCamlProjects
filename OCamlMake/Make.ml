@@ -1,3 +1,9 @@
+(**
+ * A command-line tool to build OCaml program.
+ *
+ * Make uses OCamlDep to guess dependencies between modules, required packages, etc.
+ * Make can also build documentation, bootstrap scripts, etc. *)
+
 open Utils
 
 module Flag = OCamlMake_Common_Flag
@@ -14,6 +20,7 @@ let args () =
     "Builder.exe -target <target> [-debug]";
   File.parse !target, !debug
 
+(* Main entry point to OCamlMake. *)
 let main () =
   let target, debug = args () in
 

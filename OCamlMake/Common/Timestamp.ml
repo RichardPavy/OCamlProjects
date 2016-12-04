@@ -1,3 +1,5 @@
+(** Last-modification timestamps of files. *)
+
 module HashSet = Container_HashSet
 open Utils
 
@@ -9,6 +11,7 @@ let register_file file =
   let h = file |> File.strip_ext |> get_files_with_base
   in if not (HashSet.mem h file) then HashSet.add h file
 
+(** Enum for the type of file. *)
 type file_kind =
   | Special
   | Folder
@@ -50,9 +53,18 @@ let { Cache.fn = get_info ;
 			end
 	     get_info_nocache
 
+(** Returns the type of a file. *)
 let kind file = fst (get_info file)
+
+(** Returns the last modification timestamp of a file. *)
 let get file = snd (get_info file)
 
+(**
+ * Clears the cache for all the files that share the same base name
+ * (i.e.: same name, different extensions).
+ *
+ * This is useful to erase the cache after a file is compiled. Usually
+ * compiled object files share the same base name as the source file. *)
 let clear file =
   let base = File.strip_ext file in
   Iterable.iter clear_info
